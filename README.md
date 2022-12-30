@@ -3,3 +3,7 @@
 This is the reproduction for Explicit Pseudo-pixel Supervision (EPS), which is accepted in CVPR 2021.
 
 Paper Link : [here](https://openaccess.thecvf.com/content/CVPR2021/html/Lee_Railroad_Is_Not_a_Train_Saliency_As_Pseudo-Pixel_Supervision_for_CVPR_2021_paper.html)
+
+EPS is method for Weakly Supervised Semantic Segmentation, and they use localization map and saliency map together for improving pseudo-label quality.
+
+Implementation detail might differ from the [original implementation.](https://github.com/halbielee/EPS)
