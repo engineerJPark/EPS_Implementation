@@ -1,7 +1,7 @@
 import argparse
 import os
 
-from misc import pyutils
+from utils import pyutils
 
 if __name__ == '__main__':
 
@@ -136,3 +136,6 @@ if __name__ == '__main__':
         timer = pyutils.Timer('step.eval_sem_seg:')
         step.eval_sem_seg.run(args)
 
+# train
+# inference
+# evaluate
