@@ -14,7 +14,7 @@ def pil_resize(img, size, order):
     elif order == 0:
         resample = Image.NEAREST
 
-    return np.asarray(Image.fromarray(img).resize(size[::-1], resample))
+    return np.asarray(Image.fromarray(img).resize(size[::-1], resample)) # size get as order for width, height
 
 def pil_rescale(img, scale, order):
     height, width = img.shape[:2]
@@ -78,6 +78,10 @@ def get_random_crop_box(imgsize, cropsize):
     return cont_top, cont_top+ch, cont_left, cont_left+cw, img_top, img_top+ch, img_left, img_left+cw
 
 def random_crop(images, cropsize, default_values):
+    '''
+    do random crop, 
+    hollow part will be filled with default_values
+    '''
 
     if isinstance(images, np.ndarray): images = (images,)
     if isinstance(default_values, int): default_values = (default_values,)

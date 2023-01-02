@@ -163,3 +163,4 @@ cython_debug/
 # additional ignore
 dataset/
 net/pretrained/
+test.py

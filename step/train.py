@@ -1,3 +1,13 @@
+##################################################################################################
+# TODO
+# CAM on C classes & bg
+# match C classes of CAM to saliency images : Ms = lamb*Mfg + (1-lamb)*(1-Mbg)
+# Mi -> binary by 0.5
+# overlapping with saliency map with 0.4
+# Mfg = label * Mi
+# Mbg = label * Mi + Mc+1
+# get Lsal and Lcls : see papers 
+##################################################################################################
 
 import torch
 import torch.nn as nn
@@ -6,13 +16,15 @@ from torch.utils.data import DataLoader
 from val import validate
 import importlib
 
-from dataset.voc12 import dataloader_voc
-from dataset.coco import dataloader_coco
+from voc12 import dataloader
 from utils import pyutils, torchutils
 
 def run(args):
 
-    model = getattr(importlib.import_module(args.cam_network), 'Net')()
+    model = getattr(importlib.import_module('net.resnet38_base'), 'Net')()
+    
+    
+    
 
 
     train_dataset = voc12.dataloader.VOC12ClassificationDataset(args.train_list, voc12_root=args.voc12_root,
@@ -74,3 +86,7 @@ def run(args):
     torch.save(model.module.state_dict(), args.cam_weights_name + '.pth')
    
     # how to get model to be distributed?????????
+    
+    
+    
+    
