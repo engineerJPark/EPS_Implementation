@@ -223,3 +223,54 @@ class VOC12SegmentationDataset(Dataset):
         img = imutils.HWC_to_CHW(img)
 
         return {'name': name, 'img': img, 'label': label}
+
+
+class VOC12SaliencyMap(Dataset):
+    '''
+    Saliency Map attained from PFAN
+    '''
+    def __init__(self, img_name_list_path, label_dir, crop_size, voc12_root,
+                 rescale=None, img_normal=Normalize(), hor_flip=False,
+                 crop_method = 'random'):
+
+        self.img_name_list = load_img_name_list(img_name_list_path)
+        self.voc12_root = voc12_root
+
+        self.label_dir = label_dir
+
+        self.rescale = rescale
+        self.crop_size = crop_size
+        self.img_normal = img_normal
+        self.hor_flip = hor_flip
+        self.crop_method = crop_method
+
+    def __len__(self):
+        return len(self.img_name_list)
+
+    def __getitem__(self, idx):
+        name = self.img_name_list[idx]
+        name_str = decode_int_filename(name)
+
+        img = imageio.imread(get_img_path(name_str, self.voc12_root))
+        label = imageio.imread(os.path.join(self.label_dir, name_str + '.png'))
+
+        img = np.asarray(img)
+
+        if self.rescale:
+            img, label = imutils.random_scale((img, label), scale_range=self.rescale, order=(3, 0))
+
+        if self.img_normal:
+            img = self.img_normal(img)
+
+        if self.hor_flip:
+            img, label = imutils.random_lr_flip((img, label))
+
+        if self.crop_method == "random":
+            img, label = imutils.random_crop((img, label), self.crop_size, (0, 255))
+        else:
+            img = imutils.top_left_crop(img, self.crop_size, 0)
+            label = imutils.top_left_crop(label, self.crop_size, 255)
+
+        img = imutils.HWC_to_CHW(img)
+
+        return {'name': name, 'img': img, 'label': label}
