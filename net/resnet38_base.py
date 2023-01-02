@@ -177,10 +177,7 @@ class Net(nn.Moduel):
                         c.weight.requires_grad = False
                         if c.bias is not None:
                             c.bias.requires_grad = False
-                elif isinstance(layer, torch.nn.BatchNorm2d):
-                    layer.eval()
-                    layer.weight.requires_grad = False
-                    layer.bias.requires_grad = False
+
                     
 class EPS(Net):
     def __init__(self, num_classes):
