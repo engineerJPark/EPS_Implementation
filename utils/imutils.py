@@ -194,15 +194,13 @@ def crf_inference(img, probs, iter=10, n_labels=21, gt_prob=0.7):
     q = d.inference(iter)
     return np.array(q).reshape((n_labels, h, w)) # probabilties
 
-# # 4 페이지의 공식으로 수정할 것
-# # background 수식 저거 아님
-# def _crf_with_alpha(image, cam_dict, alpha, t=10):
-#     v = np.array(list(cam_dict.values()))
-#     bg_score = np.power(1 - np.max(v, axis=0, keepdims=True), alpha)
-#     bgcam_score = np.concatenate((bg_score, v), axis=0)
-#     crf_score = crf_inference(image, bgcam_score, labels=bgcam_score.shape[0], t=t)
-#     n_crf_al = dict()
-#     n_crf_al[0] = crf_score[0]
-#     for i, key in enumerate(cam_dict.keys()):
-#         n_crf_al[key+1] = crf_score[i+1]
-#     return n_crf_al
+def _crf_with_alpha(image, cam_dict, bg_score, alpha, iter=10):
+    v = np.array(list(cam_dict.values()))
+    bgcam_score = np.concatenate((v, bg_score), axis=0) # last label is background label
+    
+    crf_score = crf_inference(image, bgcam_score, iter=iter, n_labels=bgcam_score.shape[0])
+    n_crf_al = dict()
+    n_crf_al[0] = crf_score[0]
+    for i, key in enumerate(cam_dict.keys()):
+        n_crf_al[key+1] = crf_score[i+1]
+    return n_crf_al

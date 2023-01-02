@@ -19,14 +19,10 @@ import importlib
 from voc12 import dataloader
 from utils import pyutils, torchutils
 
-def run(args):
+def train(args):
 
     model = getattr(importlib.import_module('net.resnet38_base'), 'Net')()
     
-    
-    
-
-
     train_dataset = voc12.dataloader.VOC12ClassificationDataset(args.train_list, voc12_root=args.voc12_root,
                                                                 resize_long=(320, 640), hor_flip=True,
                                                                 crop_size=512, crop_method="random")
@@ -89,4 +85,5 @@ def run(args):
     
     
     
-    
+# loss_sal = nn.MSELoss() # for pseudo sal map & saliency map
+# loss_cls = nn.MultiLabelSoftMarginLoss() # for predicted label and GT lable

@@ -162,13 +162,10 @@ class VOC12ClassificationDatasetMSF(VOC12ClassificationDataset):
 
         ms_img_list = []
         for s in self.scales:
-            if s == 1:
-                s_img = img
-            else:
-                s_img = imutils.pil_rescale(img, s, order=3)
+            s_img = imutils.pil_rescale(img, s, order=3) if s == 1 else img
             s_img = self.img_normal(s_img)
             s_img = imutils.HWC_to_CHW(s_img)
-            ms_img_list.append(np.stack([s_img, np.flip(s_img, -1)], axis=0))
+            ms_img_list.append(np.stack([s_img, np.flip(s_img, -1)], axis=0)) # flip trick
         if len(self.scales) == 1:
             ms_img_list = ms_img_list[0]
 
@@ -177,7 +174,10 @@ class VOC12ClassificationDatasetMSF(VOC12ClassificationDataset):
         return out
 
 class VOC12SegmentationDataset(Dataset):
-
+    '''
+    for the test time evaluation
+    the label is pixel level label, so must transform equally as input image
+    '''
     def __init__(self, img_name_list_path, label_dir, crop_size, voc12_root,
                  rescale=None, img_normal=Normalize(), hor_flip=False,
                  crop_method = 'random'):
