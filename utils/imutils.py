@@ -157,6 +157,30 @@ def center_crop(img, cropsize, default_value=0):
 def HWC_to_CHW(img):
     return np.transpose(img, (2, 0, 1))
 
+def cam2fg_n_bg(cam, sal_img, label, tau=0.4):
+    '''
+    cam image = localization map
+    saliency map
+    image-level label; should be binary
+    '''
+    localization_fg = 0
+    localization_bg = 0
+    for i in range(cam.shape[0]):
+        bin_fg = (cam[i] > 0.5)
+        bin_sal = (sal_img > 0.5)
+        
+        overlap_ratio = np.sum(np.asarray(bin_fg and bin_sal)) / np.sum(np.asarray(bin_fg))
+        if overlap_ratio > tau:
+            localization_fg += label[i] * cam[i]
+        else:
+            localization_bg += label[i] * cam[i]
+            
+    return localization_fg, localization_bg
+            
+def psuedo_saliency(fg, bg, lamb = 0.5):
+    pred_sal_map = lamb*fg + (1 - lamb)*(1 - bg)
+    return pred_sal_map
+
 def crf_inference(img, probs, iter=10, n_labels=21, gt_prob=0.7):
     h, w = img.shape[:2]
 
@@ -170,15 +194,15 @@ def crf_inference(img, probs, iter=10, n_labels=21, gt_prob=0.7):
     q = d.inference(iter)
     return np.array(q).reshape((n_labels, h, w)) # probabilties
 
-
-# 4 페이지의 공식으로 수정할 것
-def _crf_with_alpha(image, cam_dict, alpha, t=10):
-    v = np.array(list(cam_dict.values()))
-    bg_score = np.power(1 - np.max(v, axis=0, keepdims=True), alpha)
-    bgcam_score = np.concatenate((bg_score, v), axis=0)
-    crf_score = crf_inference(image, bgcam_score, labels=bgcam_score.shape[0], t=t)
-    n_crf_al = dict()
-    n_crf_al[0] = crf_score[0]
-    for i, key in enumerate(cam_dict.keys()):
-        n_crf_al[key+1] = crf_score[i+1]
-    return n_crf_al
+# # 4 페이지의 공식으로 수정할 것
+# # background 수식 저거 아님
+# def _crf_with_alpha(image, cam_dict, alpha, t=10):
+#     v = np.array(list(cam_dict.values()))
+#     bg_score = np.power(1 - np.max(v, axis=0, keepdims=True), alpha)
+#     bgcam_score = np.concatenate((bg_score, v), axis=0)
+#     crf_score = crf_inference(image, bgcam_score, labels=bgcam_score.shape[0], t=t)
+#     n_crf_al = dict()
+#     n_crf_al[0] = crf_score[0]
+#     for i, key in enumerate(cam_dict.keys()):
+#         n_crf_al[key+1] = crf_score[i+1]
+#     return n_crf_al
