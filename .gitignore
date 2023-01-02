@@ -160,7 +160,5 @@ cython_debug/
 #.idea/
 
 
-VOCdevkit
-EPS_real/VOCdevkit
-SALImages/
-PATH
+# additional ignore
+dataset/
