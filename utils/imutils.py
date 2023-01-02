@@ -181,15 +181,15 @@ def psuedo_saliency(fg, bg, lamb = 0.5):
     pred_sal_map = lamb*fg + (1 - lamb)*(1 - bg)
     return pred_sal_map
 
-def crf_inference(img, probs, iter=10, n_labels=21, gt_prob=0.7):
+def crf_inference(img, probs, scale_factor=1, iter=10, n_labels=21, gt_prob=0.7):
     h, w = img.shape[:2]
 
     d = dcrf.DenseCRF2D(w, h, n_labels)
     unary = unary_from_softmax(probs)
 
     d.setUnaryEnergy(unary)
-    d.addPairwiseGaussian(sxy=3, compat=3)
-    d.addPairwiseBilateral(sxy=80, srgb=13, rgbim=np.ascontiguousarray(np.copy(img)), compat=10)
+    d.addPairwiseGaussian(sxy=3/scale_factor, compat=3)
+    d.addPairwiseBilateral(sxy=80/scale_factor, srgb=13, rgbim=np.ascontiguousarray(np.copy(img)), compat=10)
 
     q = d.inference(iter)
     return np.array(q).reshape((n_labels, h, w)) # probabilties
