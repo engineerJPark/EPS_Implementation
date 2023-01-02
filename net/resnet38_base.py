@@ -137,7 +137,7 @@ class Net(nn.Moduel):
         self.not_training = [self.conv1a]
         self.normalize = Normalize()
         
-        def forward(self, x)
+        def forward(self, x):
             x = self.conv1a(x)
             
             x = self.b2(x)
@@ -180,4 +180,40 @@ class Net(nn.Moduel):
                 elif isinstance(layer, torch.nn.BatchNorm2d):
                     layer.eval()
                     layer.weight.requires_grad = False
-                    layer.bias.requires_grad = False  
+                    layer.bias.requires_grad = False
+                    
+class EPS(Net):
+    def __init__(self, num_classes):
+        super(EPS, self).__init__()
+        
+        self.conv_cam = nn.Conv2d(4096, num_classes, 1, bias=False)
+        torch.nn.init.kaiming_uniform_(self.conv_cam)
+        
+        ###############################################
+        # utility
+        self.not_training = [self.conv1a, self.b2, self.b2_1, self.b2_2]
+        self.from_scratch_layers = [self.conv_cam]
+        
+    def forward(self, x): # give prediction & CAM 
+        x = super(EPS, self).forward(x)
+        x_cam = F.relu(self.conv_cam(x))
+        x = F.adaptive_avg_pool2d(x)
+        x = F.relu(self.conv_cam(x))
+        x = x.reshape(x.shape[0], -1)
+        return x, x_cam
+    
+    def get_parameter_groups(self):
+        groups = ([],[],[],[]) # 2 grad false, 2 grad true
+        for m in self.modules():
+            if isinstance(n, nn.Conv2d):
+                if m.weight.requires_grad == True:
+                    groups[2].append(m.weight)
+                else:
+                    groups[0].append(m.weight)
+                    
+                if m.bias.requires_grad == True:
+                    groups[2].append(m.bias)
+                else:
+                    groups[0].append(m.bias)
+        return groups
+            

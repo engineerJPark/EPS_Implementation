@@ -162,3 +162,5 @@ cython_debug/
 
 VOCdevkit
 EPS_real/VOCdevkit
+SALImages/
+PATH
