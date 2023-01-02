@@ -177,6 +177,9 @@ class Net(nn.Moduel):
                         c.weight.requires_grad = False
                         if c.bias is not None:
                             c.bias.requires_grad = False
+                            
+        def load_pretrained(filename='./net/pretrained/resnet38.pth'): # get weight from pretrained one
+            self.load_state_dict(torch.load(filename))
 
                     
 class EPS(Net):
@@ -213,4 +216,5 @@ class EPS(Net):
                 else:
                     groups[0].append(m.bias)
         return groups
-            
+    
+    
