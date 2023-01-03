@@ -26,6 +26,7 @@ def random_resize_long(img, min_long, max_long):
     target_long = random.randint(min_long, max_long)
     
     img_list = []
+    if isinstance(img, tuple) == False : img = (img, )
     for sub_img in img:
         h, w = img.shape[:2]
 
@@ -34,7 +35,7 @@ def random_resize_long(img, min_long, max_long):
         else:
             scale = target_long / w
         img_list.append(pil_rescale(sub_img, scale, 3))
-
+    img_list = img_list if len(img) == 1 else img_list
     return img_list
 
 def random_scale(img, scale_range, order):
@@ -160,31 +161,6 @@ def center_crop(img, cropsize, default_value=0):
 
 def HWC_to_CHW(img):
     return np.transpose(img, (2, 0, 1))
-
-def cam2fg_n_bg(cam, sal_img, label, tau=0.4):
-    '''
-    cam image = localization map for C classes & 1 background
-    saliency map
-    image-level label; should be binary
-    '''
-    localization_fg = 0
-    localization_bg = 0
-    for i in range(cam.shape[0]):
-        bin_fg = (cam[i] > 0.5)
-        bin_sal = (sal_img > 0.5)
-        
-        overlap_ratio = np.sum(np.asarray(bin_fg and bin_sal)) / np.sum(np.asarray(bin_fg))
-        if overlap_ratio > tau:
-            localization_fg += label[i] * cam[i]
-        else:
-            localization_bg += label[i] * cam[i]
-    localization_bg += cam[-1]
-            
-    return localization_fg, localization_bg
-            
-def psuedo_saliency(fg, bg, lamb = 0.5):
-    pred_sal_map = lamb*fg + (1 - lamb)*(1 - bg)
-    return pred_sal_map
 
 def crf_inference(img, probs, scale_factor=1, iter=10, n_labels=21, gt_prob=0.7):
     h, w = img.shape[:2]

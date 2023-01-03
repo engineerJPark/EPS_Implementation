@@ -1,6 +1,7 @@
 
 import torch
-
+import torch.nn as nn
+import torch.nn.functional as F
 from torch.utils.data import Subset
 import numpy as np
 import math
@@ -74,3 +75,41 @@ def gap2d(x, keepdims=False):
         out = out.view(out.size(0), out.size(1), 1, 1)
 
     return out
+
+def cam2fg_n_bg(cam, sal_img, label, num_classes=20, tau=0.4):
+    '''
+    cam image = localization map for C classes & 1 background, BCHW dimension
+    saliency map = be in torch 
+    image-level label; should be binary index label
+    num_classes dont include the background
+    '''
+    b,c,h,w = cam.shape
+    
+    # getting saliency map & label map setting
+    pred_sal = F.softmax(cam, dim=1)
+    label_map = label.reshape(b, num_classes, 1, 1).expand(b, num_classes, h, w)
+    label_map_fg = torch.zeros((b, num_classes + 1, h, w)).bool().cuda()
+    label_map_bg = torch.zeros((b, num_classes + 1, h, w)).bool().cuda()
+    label_map_fg[:, :-1] = label_map.clone()
+    label_map_bg[:, num_classes] = True
+    
+    # set overlapping ratio & get right label index for indicating the CAM
+    overlap_ratio = ((pred_sal[:, :-1].detach() > 0.5) & (sal_img > 0.5)).reshape(b, num_classes, -1) / \
+        ((pred_sal[:, :-1].detach() > 0.5) + 1e-5).reshape(b, num_classes, -1)
+    valid_channel_map = overlap_ratio.reshape(b, num_classes, 1, 1).expand(b, num_classes, h, w)
+    label_map_fg[:,:-1] = label_map & valid_channel_map
+    label_map_bg[:,:-1] = label_map & (~valid_channel_map)
+    
+    # get right prediction of saliency
+    fg = torch.sum(pred_sal[label_map_fg], dim=1, keepdim=True).cuda()
+    bg = torch.sum(pred_sal[label_map_bg], dim=1, keepdim=True).cuda()
+    
+    return fg, bg
+            
+def psuedo_saliency(fg, bg, lamb = 0.5):
+    '''
+    use with cam2fg_n_bg
+    getting saliency prediction by prediction of foreground & background
+    '''
+    pred_sal_map = lamb*fg + (1 - lamb)*(1 - bg)
+    return pred_sal_map

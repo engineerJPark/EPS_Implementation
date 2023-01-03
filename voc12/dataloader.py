@@ -130,7 +130,7 @@ class VOC12ImageDataset(Dataset):
             img = imutils.HWC_to_CHW(img)
             sal_img = imutils.HWC_to_CHW(sal_img)
 
-        return {'name': name_str, 'img': img, 'sal_img': sal_img}
+        return {'name': name_str, 'img': img, 'sal_img': sal_img} # for time when you need img only, use dictionary
 
 class VOC12ClassificationDataset(VOC12ImageDataset):
 
