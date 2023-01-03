@@ -196,14 +196,28 @@ def img2npy(img, img_name, labels):
     # npy exporting
     np.save(os.path.join('./cam_result', img_name + '.npy'), {"labels": labels, "cam": img})
     
+    
 def npy2img(img_name, npy_path='./cam_result'):
     '''
     function for recall npy to show CAM image
     npy_path is the path for the npy file
     img_name is name of the image
     '''
-    data_dict = np.load(npy_path + img_name).item()
+    data_dict = np.load(npy_path + '_' + img_name).item()
     labels = data_dict['labels']
     cam = data_dict['cam']
     
     return labels, cam
+
+
+'''
+### how to use img2npy & npy2img
+for step, pack enumerate(data_loader):
+    id = pack['name']
+    img2npy(cam, id, labels)
+
+from dataset.dataloader import load_img_name_list
+img_name_list = load_img_name_list(img_name_list_path)
+for id in img_name_list:
+    npy2img(id)
+'''
