@@ -37,6 +37,7 @@ def train(args):
 
     # model setting & train mode
     model = getattr(importlib.import_module('net.resnet38_base'), 'EPS')()
+    model.load_pretrained('./net/pretrained/resnet38.pth')
     if torch.cuda.device_count() > 1:
         print("There are(is)", torch.cuda.device_count(), "GPUs!")
         model = nn.DataParallel(model)
