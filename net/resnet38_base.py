@@ -30,7 +30,7 @@ class ResBlock(nn.Module):
         self.bn_branch2a = FixedBatchNorm(in_channels)
         self.conv_branch2a = nn.Conv2d(in_channels, mid_channels, 3, stride, padding=first_dilation, dilation=first_dilation, bias=False)
         self.bn_branch2b1 = FixedBatchNorm(mid_channels)
-        self.conv_branch2b1 = nn.Conv2d(mid_channels, out_channels, 3, stride, padding=dilation, dilation=dilation, bias=False)
+        self.conv_branch2b1 = nn.Conv2d(mid_channels, out_channels, 3, padding=dilation, dilation=dilation, bias=False)
         
         if not self.same_shape:
             self.conv_branch1 = nn.Conv2d(in_channels, out_channels, 1, stride, bias=False)
@@ -111,11 +111,11 @@ class Net(nn.Moduel):
         self.conv1a = nn.Conv2d(3,64,3,padding=1,bias=False)
         self.b2 = ResBlock(64,128,128,stride=2)
         self.b2_1 = ResBlock(128,128,128)
-        self.b2_1 = ResBlock(128,128,128)
+        self.b2_2 = ResBlock(128,128,128)
         
         self.b2 = ResBlock(128,256,256,stride=2)
         self.b2_1 = ResBlock(256,256,256)
-        self.b2_1 = ResBlock(256,256,256)
+        self.b2_2 = ResBlock(256,256,256)
         
         self.b4 = ResBlock(256,512,512,stride=2)
         self.b4_1 = ResBlock(512,512,512)
