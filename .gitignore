@@ -164,3 +164,4 @@ cython_debug/
 dataset/
 net/pretrained/
 test.py
+cam_result

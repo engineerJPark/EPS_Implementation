@@ -1,6 +1,6 @@
 import random
 import numpy as np
-
+import os
 import pydensecrf.densecrf as dcrf
 from pydensecrf.utils import unary_from_softmax
 from PIL import Image
@@ -185,3 +185,25 @@ def _crf_with_alpha(image, cam_dict, bg_score, alpha, iter=10):
     for i, key in enumerate(cam_dict.keys()):
         n_crf_al[key+1] = crf_score[i+1]
     return n_crf_al
+
+
+def img2npy(img, img_name, labels):
+    '''
+    function for save CAM to npy file
+    img is cam
+    id is name of input image 
+    '''
+    # npy exporting
+    np.save(os.path.join('./cam_result', img_name + '.npy'), {"labels": labels, "cam": img})
+    
+def npy2img(img_name, npy_path='./cam_result'):
+    '''
+    function for recall npy to show CAM image
+    npy_path is the path for the npy file
+    img_name is name of the image
+    '''
+    data_dict = np.load(npy_path + img_name).item()
+    labels = data_dict['labels']
+    cam = data_dict['cam']
+    
+    return labels, cam

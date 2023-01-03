@@ -186,7 +186,7 @@ class EPS(Net):
     def __init__(self, num_classes):
         super(EPS, self).__init__()
         
-        self.conv_cam = nn.Conv2d(4096, num_classes, 1, bias=False)
+        self.conv_cam = nn.Conv2d(4096, num_classes + 1, 1, bias=False) # background -> +1
         torch.nn.init.kaiming_uniform_(self.conv_cam)
         
         ###############################################

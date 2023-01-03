@@ -57,14 +57,14 @@ def train(args):
             label = pack['label'].cuda(non_blocking=True)
 
             # prediction
-            x, x_cam = model(img)
+            out, out_cam = model(img)
             
             # classification loss
-            loss_cls = F.multilabel_soft_margin_loss(x, label) # for predicted label and GT lable
+            loss_cls = F.multilabel_soft_margin_loss(out[:, :-1], label) # for predicted label and GT lable
             
             # saliency loss ... need to be fixed : sal_img should come from dataloader
-            fg, bg = imutils.cam2fg_n_bg(x_cam, sal_img, label) # label should be one hot decoded
-            pred_sal = imutils.psuedo_saliency(fg, bg)
+            fg, bg = torchutils.cam2fg_n_bg(out_cam, sal_img, label) # label should be one hot decoded
+            pred_sal = torchutils.psuedo_saliency(fg, bg)
             loss_sal = F.mse_loss(pred_sal, sal_img) # for pseudo sal map & saliency map
 
             # total loss

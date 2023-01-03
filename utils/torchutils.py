@@ -76,7 +76,7 @@ def gap2d(x, keepdims=False):
 
     return out
 
-def cam2fg_n_bg(cam, sal_img, label, num_classes=20, tau=0.4):
+def cam2fg_n_bg(cam, sal_img, label, num_classes=20, sal_thres=0.5, tau=0.4):
     '''
     cam image = localization map for C classes & 1 background, BCHW dimension
     saliency map = be in torch 
@@ -91,12 +91,12 @@ def cam2fg_n_bg(cam, sal_img, label, num_classes=20, tau=0.4):
     label_map_fg = torch.zeros((b, num_classes + 1, h, w)).bool().cuda()
     label_map_bg = torch.zeros((b, num_classes + 1, h, w)).bool().cuda()
     label_map_fg[:, :-1] = label_map.clone()
-    label_map_bg[:, num_classes] = True
+    label_map_bg[:, num_classes] = True # for summing all element of M_c+1
     
     # set overlapping ratio & get right label index for indicating the CAM
-    overlap_ratio = ((pred_sal[:, :-1].detach() > 0.5) & (sal_img > 0.5)).reshape(b, num_classes, -1) / \
-        ((pred_sal[:, :-1].detach() > 0.5) + 1e-5).reshape(b, num_classes, -1)
-    valid_channel_map = overlap_ratio.reshape(b, num_classes, 1, 1).expand(b, num_classes, h, w)
+    overlap_ratio = ((pred_sal[:, :-1].detach() > sal_thres) & (sal_img > sal_thres)).reshape(b, num_classes, -1) / \
+        ((pred_sal[:, :-1].detach() > sal_thres) + 1e-5).reshape(b, num_classes, -1) # get overlapping ratio for each channel
+    valid_channel_map = (overlap_ratio > tau).reshape(b, num_classes, 1, 1).expand(b, num_classes, h, w)
     label_map_fg[:,:-1] = label_map & valid_channel_map
     label_map_bg[:,:-1] = label_map & (~valid_channel_map)
     
