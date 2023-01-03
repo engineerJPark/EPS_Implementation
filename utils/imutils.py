@@ -24,14 +24,18 @@ def pil_rescale(img, scale, order):
 
 def random_resize_long(img, min_long, max_long):
     target_long = random.randint(min_long, max_long)
-    h, w = img.shape[:2]
+    
+    img_list = []
+    for sub_img in img:
+        h, w = img.shape[:2]
 
-    if w < h:
-        scale = target_long / h
-    else:
-        scale = target_long / w
+        if w < h:
+            scale = target_long / h
+        else:
+            scale = target_long / w
+        img_list.append(pil_rescale(sub_img, scale, 3))
 
-    return pil_rescale(img, scale, 3)
+    return img_list
 
 def random_scale(img, scale_range, order):
 
@@ -105,7 +109,7 @@ def random_crop(images, cropsize, default_values):
     return new_images
 
 def top_left_crop(img, cropsize, default_value):
-
+    
     h, w = img.shape[:2]
 
     ch = min(cropsize, h)
@@ -159,7 +163,7 @@ def HWC_to_CHW(img):
 
 def cam2fg_n_bg(cam, sal_img, label, tau=0.4):
     '''
-    cam image = localization map
+    cam image = localization map for C classes & 1 background
     saliency map
     image-level label; should be binary
     '''
@@ -174,6 +178,7 @@ def cam2fg_n_bg(cam, sal_img, label, tau=0.4):
             localization_fg += label[i] * cam[i]
         else:
             localization_bg += label[i] * cam[i]
+    localization_bg += cam[-1]
             
     return localization_fg, localization_bg
             

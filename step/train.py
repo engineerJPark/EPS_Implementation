@@ -1,14 +1,3 @@
-##################################################################################################
-# TODO
-# CAM on C classes & bg
-# match C classes of CAM to saliency images : Ms = lamb*Mfg + (1-lamb)*(1-Mbg)
-# Mi -> binary by 0.5
-# overlapping with saliency map with 0.4
-# Mfg = label * Mi
-# Mbg = label * Mi + Mc+1
-# get Lsal and Lcls : see papers 
-##################################################################################################
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -19,10 +8,7 @@ import importlib
 from voc12 import dataloader
 from utils import pyutils, torchutils, imutils
 
-def train(args):
-
-    model = getattr(importlib.import_module('net.resnet38_base'), 'EPS')()
-    
+def train(args):    
     # train & validation & saliency data loading
     train_dataset = dataloader.VOC12ClassificationDataset(args.train_list, voc12_root=args.voc12_root,
                                                                 resize_long=(320, 640), hor_flip=True,
@@ -49,8 +35,12 @@ def train(args):
         {'params': param_groups[3], 'lr': 20*args.lr, 'weight_decay': 0}
     ], lr=args.lr, weight_decay=args.wt_dec, max_step=max_step)
 
-    # model train
-    model = torch.nn.DataParallel(model).cuda()
+    # model setting & train mode
+    model = getattr(importlib.import_module('net.resnet38_base'), 'EPS')()
+    if torch.cuda.device_count() > 1:
+        print("There are(is)", torch.cuda.device_count(), "GPUs!")
+        model = nn.DataParallel(model)
+    model.cuda()
     model.train()
 
     # metric, timer
@@ -61,8 +51,9 @@ def train(args):
         print('Epoch %d/%d' % (ep+1, args.cam_num_epoches))
 
         for step, pack in enumerate(train_data_loader):
-            # img, label
-            img = pack['img']
+            # img, label & cuda
+            img = pack['img'].cuda(non_blocking=True)
+            sal_img = pack['sal_img'].cuda(non_blocking=True)
             label = pack['label'].cuda(non_blocking=True)
 
             # prediction
