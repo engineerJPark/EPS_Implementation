@@ -128,7 +128,7 @@ class Net(nn.Moduel):
         self.b5_1 = ResBlock(1024,512,1024,dilation=2)
         self.b5_2 = ResBlock(1024,512,1024,dilation=2)
         
-        self.b6 = BottleneckBlock(1024,2048,stride=1,dilation=4,dropout=0.3)
+        self.b6 = BottleneckBlock(1024,2048,dilation=4,dropout=0.3)
         self.b7 = BottleneckBlock(2048,4096,dilation=4,dropout=0.5)
         self.bn7 = nn.BatchNorm2d(4096)
         
@@ -216,5 +216,4 @@ class EPS(Net):
                 else:
                     groups[0].append(m.bias)
         return groups
-    
     
