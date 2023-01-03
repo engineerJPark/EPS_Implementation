@@ -40,8 +40,8 @@ if __name__ == '__main__':
     # Step
     parser.add_argument("--train_pass", default=True)
     parser.add_argument("--make_cam_pass", default=True)
-    parser.add_argument("--edit_cam_pass", default=True)
-    parser.add_argument("--eval_cam_pass", default=True)
+    # parser.add_argument("--edit_cam_pass", default=True)
+    parser.add_argument("--eval_pass", default=True)
 
     args = parser.parse_args()
 
@@ -65,18 +65,12 @@ if __name__ == '__main__':
 
         timer = pyutils.Timer('step.make_cam:')
         step.make_cam.run(args)
-        
-    if args.edit_cam_pass is True:
-        import step.make_cam
 
-        timer = pyutils.Timer('step.make_cam:')
-        step.make_cam.run(args)
+    if args.eval_pass is True:
+        import step.eval
 
-    if args.eval_cam_pass is True:
-        import step.eval_cam
-
-        timer = pyutils.Timer('step.eval_cam:')
-        step.eval_cam.run(args)
+        timer = pyutils.Timer('step.eval:')
+        step.eval.run(args)
 
 
 # train
