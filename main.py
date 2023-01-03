@@ -32,6 +32,15 @@ if __name__ == '__main__':
     parser.add_argument("--cam_eval_thres", default=0.15, type=float)
     parser.add_argument("--cam_scales", default=(1.0, 0.5, 1.5, 2.0),
                         help="Multi-scale inferences")
+    
+    # Evaluation
+    # need to be fixed
+    parser.add_argument('--dataset', default='voc12', required=True)
+    parser.add_argument('--datalist', default='voc12/train.txt', required=True, type=str)
+    parser.add_argument('--gt_dir', default='dataset/VOCdevkit/VOC2012/', required=True, type=str)
+    parser.add_argument('--pred_dir', default='savefile/cam', required=True, type=str)
+    parser.add_argument('--save_path', default='eval_log.txt', required=True, type=str)
+    
     # Output Path
     parser.add_argument("--log_name", default="sample_train_eval", type=str)
     parser.add_argument("--cam_weights_name", default="sess/res50_cam.pth", type=str)
