@@ -205,7 +205,7 @@ class EPS(Net):
     def get_parameter_groups(self):
         groups = ([],[],[],[]) # 2 grad false, 2 grad true
         for m in self.modules():
-            if isinstance(n, nn.Conv2d):
+            if isinstance(m, nn.Conv2d):
                 if m.weight.requires_grad == True:
                     groups[2].append(m.weight)
                 else:
