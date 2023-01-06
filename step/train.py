@@ -6,6 +6,7 @@ import importlib
 
 from voc12 import dataloader
 from utils import pyutils, torchutils, imutils
+from net.resnet38_base import EPS
 
 def train(args):
     # train & validation & saliency data loading
@@ -26,16 +27,16 @@ def train(args):
     max_step = (len(train_dataset) // args.cam_batch_size) * args.cam_num_epoches
     
     # model setting & train mode
-    model = getattr(importlib.import_module('net.resnet38_base'), 'EPS')()
-    model.load_pretrained(args.pretrained_path)
+    model = EPS(args.num_classes, args.pretrained_path) # model = getattr(importlib.import_module('net.resnet38_base'), 'EPS')(args.num_classes)
+    # model.load_pretrained(args.pretrained_path)
     if torch.cuda.device_count() > 1:
         print("There are(is)", torch.cuda.device_count(), "GPUs!")
         model = nn.DataParallel(model)
     model.cuda()
-    model.train()
+    model.module.train()
 
     # parameter call & optimizer setting
-    param_groups = model.get_parameter_groups()
+    param_groups = model.module.get_parameter_groups() # is it okay?
     optimizer = torchutils.PolyOptimizer([
         {'params': param_groups[0], 'lr': args.lr, 'weight_decay': args.wt_dec},
         {'params': param_groups[1], 'lr': 2*args.lr, 'weight_decay': 0},

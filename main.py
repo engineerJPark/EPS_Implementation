@@ -21,7 +21,7 @@ if __name__ == '__main__':
     parser.add_argument("--infer_list", default="voc12/train_aug.txt", type=str,
                         help="voc12/train_aug.txt to train a fully supervised model, "
                              "voc12/train.txt or voc12/val.txt to quickly check the quality of the labels.")
-    # parser.add_argument("--num_classes", default=20, type=int)
+    parser.add_argument("--num_classes", default=20, type=int)
     parser.add_argument("--pretrained_path", default="savefile/pretrained/resnet38.pth", type=str)
 
     # Class Activation Map
