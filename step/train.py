@@ -2,21 +2,20 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-from val import validate
 import importlib
 
 from voc12 import dataloader
 from utils import pyutils, torchutils, imutils
 
-def run(args):    
+def train(args):
     # train & validation & saliency data loading
-    train_dataset = dataloader.VOC12ClassificationDataset(args.train_list, voc12_root=args.voc12_root,
+    train_dataset = dataloader.VOC12ClassificationDataset(args.train_list, voc12_root=args.voc12_root, sal_root=args.sal_root,
                                                                 resize_long=(320, 640), hor_flip=True,
                                                                 crop_size=512, crop_method="random")
     train_data_loader = DataLoader(train_dataset, batch_size=args.cam_batch_size,
                                    shuffle=True, num_workers=args.num_workers, pin_memory=True, drop_last=True)
 
-    val_dataset = dataloader.VOC12ClassificationDataset(args.val_list, voc12_root=args.voc12_root,
+    val_dataset = dataloader.VOC12ClassificationDataset(args.val_list, voc12_root=args.voc12_root, sal_root=args.sal_root,
                                                               crop_size=512)
     val_data_loader = DataLoader(val_dataset, batch_size=args.cam_batch_size,
                                  shuffle=False, num_workers=args.num_workers, pin_memory=True, drop_last=True)
@@ -25,6 +24,15 @@ def run(args):
     
     # getting max_iteration
     max_step = (len(train_dataset) // args.cam_batch_size) * args.cam_num_epoches
+    
+    # model setting & train mode
+    model = getattr(importlib.import_module('net.resnet38_base'), 'EPS')()
+    model.load_pretrained(args.pretrained_path)
+    if torch.cuda.device_count() > 1:
+        print("There are(is)", torch.cuda.device_count(), "GPUs!")
+        model = nn.DataParallel(model)
+    model.cuda()
+    model.train()
 
     # parameter call & optimizer setting
     param_groups = model.get_parameter_groups()
@@ -34,15 +42,6 @@ def run(args):
         {'params': param_groups[2], 'lr': 10*args.lr, 'weight_decay': args.wt_dec},
         {'params': param_groups[3], 'lr': 20*args.lr, 'weight_decay': 0}
     ], lr=args.lr, weight_decay=args.wt_dec, max_step=max_step)
-
-    # model setting & train mode
-    model = getattr(importlib.import_module('net.resnet38_base'), 'EPS')()
-    model.load_pretrained(args.pretrained_path)
-    if torch.cuda.device_count() > 1:
-        print("There are(is)", torch.cuda.device_count(), "GPUs!")
-        model = nn.DataParallel(model)
-    model.cuda()
-    model.train()
 
     # metric, timer
     avg_meter = pyutils.AverageMeter()
@@ -92,4 +91,40 @@ def run(args):
             timer.reset_stage()
 
     torch.save(model.module.state_dict(), args.cam_weights_name + '.pth')
-    
+
+
+def validate(model, data_loader):
+    model.eval()
+    print('validating ... ', flush=True, end='')
+    val_loss_meter = pyutils.AverageMeter('loss1', 'loss2')
+
+    with torch.no_grad():
+        for pack in data_loader:
+            # img, label & cuda
+            img = pack['img'].cuda(non_blocking=True)
+            sal_img = pack['sal_img'].cuda(non_blocking=True)
+            label = pack['label'].cuda(non_blocking=True)
+            
+            # prediction
+            out, out_cam = model(img)
+            
+            # classification loss
+            loss_cls = F.multilabel_soft_margin_loss(out[:, :-1], label) # for predicted label and GT lable
+            
+            # saliency loss ... need to be fixed : sal_img should come from dataloader
+            fg, bg = imutils.cam2fg_n_bg(out_cam, sal_img, label) # label should be one hot decoded
+            pred_sal = imutils.psuedo_saliency(fg, bg)
+            loss_sal = F.mse_loss(pred_sal, sal_img) # for pseudo sal map & saliency map
+            
+            # total loss
+            loss_total = loss_cls + loss_sal
+
+            # adding total loss
+            val_loss_meter.add({'loss': loss_total.item()})
+
+    print('loss: %.4f' % (val_loss_meter.pop('loss')))
+    model.train()
+    return
+
+def run(args):
+    train(args)

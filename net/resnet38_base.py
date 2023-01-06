@@ -105,7 +105,7 @@ class BottleneckBlock(nn.Module):
         return self.forward(x, get_x_bn_relu=get_x_bn_relu)
     
 
-class Net(nn.Moduel):
+class Net(nn.Module):
     def __init_(self):
         super(Net, self).__init__()
         
