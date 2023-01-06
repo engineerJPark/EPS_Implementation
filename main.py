@@ -10,9 +10,9 @@ if __name__ == '__main__':
 
     # Environment
     parser.add_argument("--num_workers", default=os.cpu_count()//2, type=int)
-    parser.add_argument("--voc12_root", default='./dataset/VOCdevkit', type=str,
+    parser.add_argument("--voc12_root", default='dataset/VOCdevkit/VOC2012', type=str,
                         help="Path to VOC 2012 Devkit, must contain ./JPEGImages as subdirectory.")
-    parser.add_argument("--sal_root", default='./dataset/SALImage', type=str,
+    parser.add_argument("--sal_root", default='dataset/SALImage', type=str,
                         help="Path to VOC 2012 Devkit, must contain ./SALImage as subdirectory.")
 
     # Dataset
@@ -23,6 +23,15 @@ if __name__ == '__main__':
                              "voc12/train.txt or voc12/val.txt to quickly check the quality of the labels.")
     parser.add_argument("--num_classes", default=20, type=int)
     parser.add_argument("--pretrained_path", default="savefile/pretrained/resnet38.pth", type=str)
+    
+    # optimizer
+    parser.add_argument("--lr", default=0.01, type=float)
+    parser.add_argument("--wt_dec", default=5e-4, type=float)
+    parser.add_argument("--max_iters", default=10000, type=int)
+
+    # hyper-parameters for EPS
+    parser.add_argument("--tau", default=0.5, type=float)
+    parser.add_argument("--lam", default=0.5, type=float)
 
     # Class Activation Map
     parser.add_argument("--cam_network", default="net.resnet38", type=str)
