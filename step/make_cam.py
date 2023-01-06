@@ -96,11 +96,11 @@ def preprocess(image, scale_list, transform):
     return multi_scale_flipped_image_list
 
 
-def predict_cam(model, image, label, scales, transform, gpu, network_type, args):
+def predict_cam(model, image, label, gpu, network_type, args):
 
     original_image_size = np.asarray(image).shape[:2]
     # preprocess image
-    multi_scale_flipped_image_list = preprocess(image, scales, transform)
+    multi_scale_flipped_image_list = preprocess(image, args.scales, args.transform)
 
     cam_list = list()
     model.eval()
@@ -251,7 +251,7 @@ def main_mp(args):
     processes = list()
     for idx, process_id in enumerate(range(n_total_processes)):
         proc = Process(target=infer_cam_mp,
-                       args=(process_id, sub_image_ids[idx], sub_label_list[idx], gpu_list[idx]))
+                       args=(process_id, sub_image_ids[idx], sub_label_list[idx], gpu_list[idx], args))
         processes.append(proc)
         proc.start()
 
@@ -260,14 +260,17 @@ def main_mp(args):
         
 
 def run(args):
-    crf_alpha = (4, 32)
+    crf_alpha = (4, 32) # for low background constraint, alpha 4, strong background constraint, alpha 32
     args = parse_args(args)
 
-    n_gpus = args.n_gpus
-    scales = (0.5, 1.0, 1.5, 2.0)
-    normalize = Normalize()
-    transform = torchvision.transforms.Compose([np.asarray, normalize, HWC_to_CHW])
-
+    # n_gpus = args.n_gpus
+    # scales = (0.5, 1.0, 1.5, 2.0)
+    # normalize = Normalize()
+    # transform = torchvision.transforms.Compose([np.asarray, normalize, HWC_to_CHW])
+    
+    args.scales = (0.5, 1.0, 1.5, 2.0)
+    args.transform = torchvision.transforms.Compose([np.asarray, Normalize(), HWC_to_CHW])
+    
     main_mp(args)
 
     print(time.time() - start)

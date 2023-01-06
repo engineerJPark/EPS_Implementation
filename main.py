@@ -36,7 +36,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--network", default="net.resnet38_based", type=str)
     parser.add_argument("--weights", required=True, type=str)
-    # parser.add_argument("--n_gpus", type=int, default=1)
+    parser.add_argument("--n_gpus", type=int, default=2)
     # parser.add_argument("--infer_list", default="voc12/train.txt", type=str)
     parser.add_argument("--n_processes_per_gpu", nargs='*', type=int)
     parser.add_argument("--n_total_processes", default=1, type=int)
