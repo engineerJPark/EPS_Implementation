@@ -23,8 +23,10 @@ start = time.time()
 def parse_args(args):
     if args.dataset == 'voc12':
         args.num_classes = 20
-    elif args.dataset == 'coco':
-        args.num_classes = 80
+        args.img_root = args.voc12_root
+    # elif args.dataset == 'coco':
+    #     args.num_classes = 80
+    #     args.img_root = args.coco_root
     else:
         raise Exception('Error')
     
@@ -37,7 +39,7 @@ def parse_args(args):
     #     args.model_num_classes = args.num_classes + 1
     # else:
     #     raise Exception('No appropriate model type')
-    
+
     args.model_num_classes = args.num_classes + 1
     
     ## model information
@@ -135,77 +137,81 @@ def _crf_with_alpha(image, cam_dict, alpha, t=10):
     return n_crf_al
 
 
-def infer_cam_mp(process_id, image_ids, label_list, cur_gpu):
+def infer_cam_mp(process_id, image_ids, label_list, cur_gpu, args):
     print('process {} starts...'.format(os.getpid()))
 
     print(process_id, cur_gpu)
     print('GPU:', cur_gpu)
     print('{} images per process'.format(len(image_ids)))
 
-    model = getattr(importlib.import_module(args.network), 'Net')(args.model_num_classes)
+    model = getattr(importlib.import_module(args.network), 'EPS')(args.model_num_classes)
     model = model.cuda(cur_gpu)
-    model.load_state_dict(torch.load(args.weights))
+    model.load_state_dict(torch.load(args.cam_weights_name))
     model.eval()
-    torch.no_grad()
+    
+    with torch.no_grad():
+        for i, (img_id, label) in enumerate(zip(image_ids, label_list)):
+            # load image
+            img_path = os.path.join(args.img_root, img_id + '.jpg')
+            img = Image.open(img_path).convert('RGB')
+            org_img = np.asarray(img)
 
-    for i, (img_id, label) in enumerate(zip(image_ids, label_list)):
+            # infer cam_list
+            cam_list = predict_cam(model, img, label, cur_gpu, args.network_type)
 
-        # load image
-        img_path = os.path.join(args.img_root, img_id + '.jpg')
-        img = Image.open(img_path).convert('RGB')
-        org_img = np.asarray(img)
-
-        # infer cam_list
-        cam_list = predict_cam(model, img, label, cur_gpu, args.network_type)
-
-        if args.network_type == 'cls':
-            sum_cam = np.sum(cam_list, axis=0)
-        elif args.network_type == 'eps':
+            # if args.network_type == 'cls':
+            #     sum_cam = np.sum(cam_list, axis=0)
+            # elif args.network_type == 'eps':
+            #     cam_np = np.array(cam_list)
+            #     cam_fg = cam_np[:, 0]
+            #     sum_cam = np.sum(cam_fg, axis=0)
+            # else:
+            #     raise Exception('No appropriate model type')
+            
             cam_np = np.array(cam_list)
             cam_fg = cam_np[:, 0]
             sum_cam = np.sum(cam_fg, axis=0)
-        else:
-            raise Exception('No appropriate model type')
-        norm_cam = sum_cam / (np.max(sum_cam, (1, 2), keepdims=True) + 1e-5)
+            norm_cam = sum_cam / (np.max(sum_cam, (1, 2), keepdims=True) + 1e-5) # normalize for each cam for each row
 
-        cam_dict = {}
-        for j in range(args.num_classes):
-            if label[j] > 1e-5:
-                cam_dict[j] = norm_cam[j]
+            cam_dict = {}
+            for j in range(args.num_classes): # save cam for all classes
+                if label[j] > 1e-5:
+                    cam_dict[j] = norm_cam[j]
 
-        h, w = list(cam_dict.values())[0].shape
-        tensor = np.zeros((args.num_classes + 1, h, w), np.float32)
-        for key in cam_dict.keys():
-            tensor[key + 1] = cam_dict[key]
-        tensor[0, :, :] = args.thr
-        pred = np.argmax(tensor, axis=0).astype(np.uint8)
+            h, w = list(cam_dict.values())[0].shape
+            tensor = np.zeros((args.num_classes + 1, h, w), np.float32)
+            for key in cam_dict.keys():
+                tensor[key + 1] = cam_dict[key]
+            tensor[0, :, :] = args.thr # give threshold
+            pred = np.argmax(tensor, axis=0).astype(np.uint8) # CAM prediction. dim CHW, value is 0,1,2,3,4,5, ...
 
-        # save cam
-        if args.cam_npy is not None:
+            # save cam
+            if args.cam_npy is not None:
+                np.save(os.path.join(args.cam_npy, img_id + '.npy'), cam_dict)
 
-            np.save(os.path.join(args.cam_npy, img_id + '.npy'), cam_dict)
+            if args.cam_png is not None:
+                imageio.imwrite(os.path.join(args.cam_png, img_id + '.png'), pred)
 
-        if args.cam_png is not None:
-            imageio.imwrite(os.path.join(args.cam_png, img_id + '.png'), pred)
-
-        if args.crf is not None:
-            for folder, t, alpha in args.crf_list:
-                cam_crf = _crf_with_alpha(org_img, cam_dict, alpha, t=t)
-                np.save(os.path.join(folder, img_id + '.npy'), cam_crf)
-        if i % 10 == 0:
-            print('PID{}, {}/{} is complete'.format(process_id, i, len(image_ids)))
+            if args.crf is not None: # save CRF CAM in npy
+                for folder, t, alpha in args.crf_list:
+                    cam_crf = _crf_with_alpha(org_img, cam_dict, alpha, t=t)
+                    np.save(os.path.join(folder, img_id + '.npy'), cam_crf)
+            if i % 10 == 0:
+                print('PID{}, {}/{} is complete'.format(process_id, i, len(image_ids)))
 
 
-def main_mp():
+def main_mp(args):
     image_ids = load_img_id_list(args.infer_list)
     label_list = load_img_label_list_from_npy(image_ids, args.dataset)
     n_total_images = len(image_ids)
     assert len(image_ids) == len(label_list)
 
-    saved_list = sorted([file[:-4] for file in os.listdir(args.save_type[0])])
+    saved_list = sorted([file[:-4] for file in os.listdir(args.save_type[0])]) ## get CAM npy or png
     n_saved_images = len(saved_list)
     new_image_ids = list()
     new_label_list = list()
+    
+    ## append imgs not in saved_list
     for i, name in enumerate(image_ids):
         if name not in saved_list:
             new_image_ids.append(name)
@@ -241,7 +247,7 @@ def main_mp():
     # multi-process
     gpu_list = list()
     for idx, num in enumerate(args.n_processes_per_gpu):
-        gpu_list.extend([idx for i in range(num)])
+        gpu_list.extend([idx for i in range(num)]) # 0,0,0,0,1,1,1,1,2,2,2,2,3,3,3, ... 
     processes = list()
     for idx, process_id in enumerate(range(n_total_processes)):
         proc = Process(target=infer_cam_mp,
@@ -252,8 +258,6 @@ def main_mp():
     for proc in processes:
         proc.join()
         
-        
-
 
 def run(args):
     crf_alpha = (4, 32)
@@ -264,6 +268,6 @@ def run(args):
     normalize = Normalize()
     transform = torchvision.transforms.Compose([np.asarray, normalize, HWC_to_CHW])
 
-    main_mp()
+    main_mp(args)
 
     print(time.time() - start)

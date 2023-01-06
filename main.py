@@ -34,7 +34,7 @@ if __name__ == '__main__':
     # parser.add_argument("--cam_scales", default=(1.0, 0.5, 1.5, 2.0),
     #                     help="Multi-scale inferences")
     parser = argparse.ArgumentParser()
-    parser.add_argument("--network", default="network.resnet38_cls", type=str)
+    parser.add_argument("--network", default="net.resnet38_based", type=str)
     parser.add_argument("--weights", required=True, type=str)
     # parser.add_argument("--n_gpus", type=int, default=1)
     # parser.add_argument("--infer_list", default="voc12/train.txt", type=str)
@@ -48,7 +48,7 @@ if __name__ == '__main__':
     parser.add_argument("--crf_t", nargs='*', type=int)
     
     ### CAM parameter
-    parser.add_argument("--cam_npy", default=None, type=str)
+    parser.add_argument("--cam_npy", default="savefile/result/cam", type=str)
     parser.add_argument("--cam_png", default=None, type=str)
     parser.add_argument("--thr", default=0.20, type=float)
     
@@ -74,9 +74,6 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     
-    # args.model_num_classes = args.num_classes + 1
-    args.img_root = args.voc12_root
-
     os.makedirs("savefile/pretrained", exist_ok=True)
     os.makedirs("savefile/result", exist_ok=True)
     os.makedirs(args.cam_out_dir, exist_ok=True)
