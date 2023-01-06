@@ -75,7 +75,7 @@ def run(args):
 
     mIOU = IOUMetric(num_classes=num_classes)
 
-    img_ids = open(args.datalist).read().splitlines()
+    img_ids = open(args.val_list).read().splitlines()
 
     postfix = '.png'
 
@@ -83,6 +83,7 @@ def run(args):
     for idx, img_id in tqdm(enumerate(img_ids)):
         gt_path = os.path.join(args.gt_dir, img_id + postfix)
         pred_path = os.path.join(args.pred_dir, img_id + '.png')
+        # pred_path = os.path.join(args.pred_dir, img_id + '.npy')
 
         gt = Image.open(gt_path) # HW
         w, h = gt.size[0], gt.size[1]

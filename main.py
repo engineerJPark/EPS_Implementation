@@ -1,5 +1,6 @@
 import argparse
 import os
+import torch
 
 from utils import pyutils
 
@@ -35,8 +36,8 @@ if __name__ == '__main__':
     #                     help="Multi-scale inferences")
     parser = argparse.ArgumentParser()
     parser.add_argument("--network", default="net.resnet38_based", type=str)
-    parser.add_argument("--weights", required=True, type=str)
-    parser.add_argument("--n_gpus", type=int, default=2)
+    # parser.add_argument("--weights", required=True, type=str)
+    parser.add_argument("--n_gpus", type=int, default=torch.cuda.device_count())
     # parser.add_argument("--infer_list", default="voc12/train.txt", type=str)
     parser.add_argument("--n_processes_per_gpu", nargs='*', type=int)
     parser.add_argument("--n_total_processes", default=1, type=int)
@@ -54,15 +55,15 @@ if __name__ == '__main__':
     
     # Evaluation
     # need to be fixed
-    parser.add_argument('--dataset', default='voc12', required=True)
-    parser.add_argument('--datalist', default='voc12/train.txt', required=True, type=str)
-    parser.add_argument('--gt_dir', default='dataset/VOCdevkit/VOC2012/', required=True, type=str)
-    parser.add_argument('--pred_dir', default='savefile/cam', required=True, type=str)
-    parser.add_argument('--save_path', default='eval_log.txt', required=True, type=str)
+    parser.add_argument('--dataset', default='voc12')
+    parser.add_argument('--datalist', default='voc12/train.txt', type=str)
+    parser.add_argument('--gt_dir', default='dataset/VOCdevkit/VOC2012/SegmentationClass', type=str)
+    parser.add_argument('--pred_dir', default='savefile/result/cam', type=str)
+    parser.add_argument('--save_path', default='eval_log.txt', type=str)
     
     # Output Path
     parser.add_argument("--log_name", default="sample_train_eval", type=str)
-    parser.add_argument("--cam_weights_name", default="savefile/pretrained/resnet38.pth", type=str)
+    parser.add_argument("--cam_weights_name", default="savefile/pretrained/resnet38_eps.pth", type=str)
     parser.add_argument("--cam_out_dir", default="savefile/result/cam", type=str) # npy path
     
 
@@ -97,12 +98,12 @@ if __name__ == '__main__':
         import step.make_cam
         timer = pyutils.Timer('step.make_cam:')
         step.make_cam.run(args)
-
+    
     if args.eval_pass is True:
         import step.eval
         timer = pyutils.Timer('step.eval:')
         step.eval.run(args)
-        
+    
     if args.draw_pass is True:
         import step.draw
         timer = pyutils.Timer('step.draw:')

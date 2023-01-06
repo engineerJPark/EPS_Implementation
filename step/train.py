@@ -8,7 +8,7 @@ import importlib
 from voc12 import dataloader
 from utils import pyutils, torchutils, imutils
 
-def train(args):    
+def run(args):    
     # train & validation & saliency data loading
     train_dataset = dataloader.VOC12ClassificationDataset(args.train_list, voc12_root=args.voc12_root,
                                                                 resize_long=(320, 640), hor_flip=True,
@@ -37,7 +37,7 @@ def train(args):
 
     # model setting & train mode
     model = getattr(importlib.import_module('net.resnet38_base'), 'EPS')()
-    model.load_pretrained('./net/pretrained/resnet38.pth')
+    model.load_pretrained(args.pretrained_path)
     if torch.cuda.device_count() > 1:
         print("There are(is)", torch.cuda.device_count(), "GPUs!")
         model = nn.DataParallel(model)
