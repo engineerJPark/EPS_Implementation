@@ -161,7 +161,6 @@ cython_debug/
 
 
 # additional ignore
-dataset/
-net/pretrained/
+dataset
+savefile
 test.py
-cam_result

@@ -143,13 +143,13 @@ def predict_cam(model, image, label, gpu, network_type):
 
 def _crf_with_alpha(image, cam_dict, alpha, t=10):
     v = np.array(list(cam_dict.values()))
-    bg_score = np.power(1 - np.max(v, axis=0, keepdims=True), alpha)
-    bgcam_score = np.concatenate((bg_score, v), axis=0)
+    bg_score = np.power(1 - np.max(v, axis=0, keepdims=True), alpha) # can be calculated by EPS unique method, but use PSA method
+    bgcam_score = np.concatenate((bg_score, v), axis=0) # bg, fg order
     crf_score = imutils.crf_inference(image, bgcam_score, labels=bgcam_score.shape[0], t=t)
     n_crf_al = dict()
-    n_crf_al[0] = crf_score[0]
+    n_crf_al[0] = crf_score[0] # bg, fg order
     for i, key in enumerate(cam_dict.keys()):
-        n_crf_al[key+1] = crf_score[i+1]
+        n_crf_al[key+1] = crf_score[i+1] # bg, fg order
     return n_crf_al
 
 
@@ -269,6 +269,8 @@ def main_mp():
 
     for proc in processes:
         proc.join()
+        
+        
 
 
 if __name__ == '__main__':

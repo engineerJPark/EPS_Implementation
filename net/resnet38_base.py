@@ -179,7 +179,10 @@ class Net(nn.Moduel):
                         if c.bias is not None:
                             c.bias.requires_grad = False
                             
-        def load_pretrained(filename='./net/pretrained/resnet38.pth'): # get weight from pretrained one
+        def load_pretrained(filename): # get weight from pretrained one
+            '''
+            use args.pretrained for filename
+            '''
             self.load_state_dict(torch.load(filename))
 
                     
