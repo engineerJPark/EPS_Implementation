@@ -48,8 +48,8 @@ if __name__ == '__main__':
     parser.add_argument("--crf_t", nargs='*', type=int)
     
     ### CAM parameter
-    parser.add_argument("--cam_npy", default="savefile/result/cam", type=str)
-    parser.add_argument("--cam_png", default=None, type=str)
+    parser.add_argument("--cam_npy", default="savefile/result/cam", type=str) # "savefile/result/cam" , separate two of them by .npy & .png
+    parser.add_argument("--cam_png", default=None, type=str) # "savefile/result/cam" , 
     parser.add_argument("--thr", default=0.20, type=float)
     
     # Evaluation

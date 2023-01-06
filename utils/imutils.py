@@ -181,9 +181,9 @@ def _crf_with_alpha(image, cam_dict, bg_score, alpha, iter=10):
     
     crf_score = crf_inference(image, bgcam_score, iter=iter, n_labels=bgcam_score.shape[0])
     n_crf_al = dict()
-    n_crf_al[0] = crf_score[0]
+    n_crf_al[0] = crf_score[0] # [bg, fg, fg, ...]
     for i, key in enumerate(cam_dict.keys()):
-        n_crf_al[key+1] = crf_score[i+1]
+        n_crf_al[key+1] = crf_score[i+1] # [bg, fg, fg, ...], keys = valid labels, values = cam image
     return n_crf_al
 
 
