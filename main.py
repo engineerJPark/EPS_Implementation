@@ -77,7 +77,10 @@ if __name__ == '__main__':
     
     os.makedirs("savefile/pretrained", exist_ok=True)
     os.makedirs("savefile/result", exist_ok=True)
+    os.makedirs("savefile/result/cam_on_img", exist_ok=True)
     os.makedirs(args.cam_out_dir, exist_ok=True)
+    
+    
     # os.makedirs(args.ir_label_out_dir, exist_ok=True)
     # os.makedirs(args.sem_seg_out_dir, exist_ok=True)
     # os.makedirs(args.ins_seg_out_dir, exist_ok=True)
@@ -104,4 +107,3 @@ if __name__ == '__main__':
         import step.draw
         timer = pyutils.Timer('step.draw:')
         step.draw.run(args)
-    
