@@ -11,49 +11,39 @@ import torchvision
 import torch.nn.functional as F
 from torch.multiprocessing import Process
 
-from util import imutils, pyutils
-from util.imutils import HWC_to_CHW
-from network.resnet38d import Normalize
-from metadata.dataset import load_img_id_list, load_img_label_list_from_npy
+from utils import imutils, pyutils
+from utils.imutils import HWC_to_CHW
+from net.resnet38_base import Normalize
+from voc12.dataloader import load_img_id_list, load_img_label_list_from_npy
 
 
 start = time.time()
 
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--network", default="network.resnet38_cls", type=str)
-    parser.add_argument("--weights", required=True, type=str)
-    parser.add_argument("--n_gpus", type=int, default=1)
-    parser.add_argument("--infer_list", default="voc12/train.txt", type=str)
-    parser.add_argument("--n_processes_per_gpu", nargs='*', type=int)
-    parser.add_argument("--n_total_processes", default=1, type=int)
-    parser.add_argument("--img_root", default='VOC2012', type=str)
-    parser.add_argument("--crf", default=None, type=str)
-    parser.add_argument("--crf_alpha", nargs='*', type=int)
-    parser.add_argument("--crf_t", nargs='*', type=int)
-    parser.add_argument("--cam_npy", default=None, type=str)
-    parser.add_argument("--cam_png", default=None, type=str)
-    parser.add_argument("--thr", default=0.20, type=float)
-    parser.add_argument("--dataset", default='voc12', type=str)
-    args = parser.parse_args()
-
+def parse_args(args):
     if args.dataset == 'voc12':
         args.num_classes = 20
     elif args.dataset == 'coco':
         args.num_classes = 80
     else:
         raise Exception('Error')
-
-    # model information
-    if 'cls' in args.network:
-        args.network_type = 'cls'
-        args.model_num_classes = args.num_classes
-    elif 'eps' in args.network:
-        args.network_type = 'eps'
-        args.model_num_classes = args.num_classes + 1
-    else:
-        raise Exception('No appropriate model type')
+    
+    # # model information
+    # if 'cls' in args.network:
+    #     args.network_type = 'cls'
+    #     args.model_num_classes = args.num_classes
+    # elif 'eps' in args.network:
+    #     args.network_type = 'eps'
+    #     args.model_num_classes = args.num_classes + 1
+    # else:
+    #     raise Exception('No appropriate model type')
+    
+    args.model_num_classes = args.num_classes + 1
+    
+    ## model information
+    
+    args.num_classes = 20
+    args.model_num_classes = args.num_classes + 1
 
     # save path
     args.save_type = list()
@@ -79,6 +69,11 @@ def parse_args():
 
 
 def preprocess(image, scale_list, transform):
+    '''
+    Image is input by HWC, numpy
+    multiscale, transformed, fliped original image
+    for get a CAM
+    '''
     img_size = image.size
     num_scales = len(scale_list)
     multi_scale_image_list = list()
@@ -99,7 +94,7 @@ def preprocess(image, scale_list, transform):
     return multi_scale_flipped_image_list
 
 
-def predict_cam(model, image, label, gpu, network_type):
+def predict_cam(model, image, label, scales, transform, gpu, network_type, args):
 
     original_image_size = np.asarray(image).shape[:2]
     # preprocess image
@@ -113,30 +108,17 @@ def predict_cam(model, image, label, gpu, network_type):
             image = image.cuda(gpu)
             cam = model.forward_cam(image)
 
-            if network_type == 'cls':
-                cam = F.interpolate(cam, original_image_size, mode='bilinear', align_corners=False)[0]
+            cam = F.softmax(cam, dim=1) # softmax in channel dimension
+            cam = F.interpolate(cam, original_image_size, mode='bilinear', align_corners=False)[0] # resize to original image
 
-                cam = cam.cpu().numpy() * label.reshape(args.num_classes, 1, 1)
+            ## get foreground and background CAM
+            cam_fg = cam[:-1].cpu().numpy() * label.reshape(args.num_classes, 1, 1)
+            cam_bg = cam[-1:].cpu().numpy()
 
-                if i % 2 == 1:
-                    cam = np.flip(cam, axis=-1)
-                cam_list.append(cam)
-            elif network_type == 'eps':
-                cam = F.softmax(cam, dim=1)
-                cam = F.interpolate(cam, original_image_size, mode='bilinear', align_corners=False)[0]
-
-                cam_fg = cam[:-1]
-                cam_bg = cam[-1:]
-
-                cam_fg = cam_fg.cpu().numpy() * label.reshape(args.num_classes, 1, 1)
-                cam_bg = cam_bg.cpu().numpy()
-
-                if i % 2 == 1:
-                    cam_fg = np.flip(cam_fg, axis=-1)
-                    cam_bg = np.flip(cam_bg, axis=-1)
-                cam_list.append((cam_fg, cam_bg))
-            else:
-                raise Exception('No appropriate model type')
+            if i % 2 == 1: # fliped image for 2 times periodically
+                cam_fg = np.flip(cam_fg, axis=-1)
+                cam_bg = np.flip(cam_bg, axis=-1)
+            cam_list.append((cam_fg, cam_bg))
 
     return cam_list
 
@@ -273,9 +255,9 @@ def main_mp():
         
 
 
-if __name__ == '__main__':
+def run(args):
     crf_alpha = (4, 32)
-    args = parse_args()
+    args = parse_args(args)
 
     n_gpus = args.n_gpus
     scales = (0.5, 1.0, 1.5, 2.0)

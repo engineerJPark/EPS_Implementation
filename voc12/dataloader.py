@@ -63,6 +63,9 @@ def get_img_path(img_name, voc12_root):
 def load_img_name_list(dataset_path):
     img_name_list = np.loadtxt(dataset_path, dtype=np.int32)
     return img_name_list
+
+def load_img_id_list(dataset_path):
+    return load_img_name_list(dataset_path)
     
 class Normalize:
     def __init__(self, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
