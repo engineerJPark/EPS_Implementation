@@ -222,7 +222,7 @@ def main_mp(args):
     n_total_processes = args.n_total_processes
     print('===========================')
     print('OVERALL INFORMATION')
-    print('n_gpus:', n_gpus)
+    print('n_gpus:', args.n_gpus)
     print('n_processes_per_gpu', args.n_processes_per_gpu)
     print('n_total_processes:', n_total_processes)
     print('n_total_images:', n_total_images)
