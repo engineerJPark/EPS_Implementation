@@ -97,14 +97,14 @@ def cam2fg_n_bg(cam, sal_img, label, num_classes=20, sal_thres=0.5, tau=0.4):
     
     # set overlapping ratio & get right label index for indicating the CAM
 
-    overlap_ratio = ((pred_sal[:, :-1].detach() > sal_thres) & (sal_img > sal_thres)).reshape(b, num_classes, -1).sum(-1) / \
-        ((pred_sal[:, :-1].detach() > sal_thres) + 1e-5).reshape(b, num_classes, -1).sum(-1) # get overlapping ratio for each channel
+    overlap_ratio = ((pred_sal[:, :-1].detach() > sal_thres) * (sal_img > sal_thres)).reshape(b, num_classes, -1).sum(-1) / \
+        ((pred_sal[:, :-1].detach() > sal_thres) + 1e-5).reshape(b, num_classes, -1).sum(-1) # get overlapping ratio for each channel, use * instead of &
     valid_channel_map = (overlap_ratio > tau).reshape(b, num_classes, 1, 1).expand(b, num_classes, h, w)
     label_map_fg[:,:-1] = label_map * valid_channel_map # instead of & or and 
     label_map_bg[:,:-1] = label_map * (~valid_channel_map)
     
-    fg = torch.zeros_like(pred_sal).cuda()
-    bg = torch.zeros_like(pred_sal).cuda()
+    fg = torch.zeros_like(pred_sal, dtype=torch.float).cuda()
+    bg = torch.zeros_like(pred_sal, dtype=torch.float).cuda()
     
     fg[label_map_fg] = pred_sal[label_map_fg]
     bg[label_map_bg] = pred_sal[label_map_bg]

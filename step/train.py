@@ -66,10 +66,12 @@ def train(args):
             # saliency loss ... need to be fixed : sal_img should come from dataloader
             fg, bg = torchutils.cam2fg_n_bg(out_cam, sal_img, label) # label should be one hot decoded
             pred_sal = torchutils.psuedo_saliency(fg, bg)
-            loss_sal = F.mse_loss(pred_sal, sal_img) # for pseudo sal map & saliency map
+            loss_sal = F.mse_loss(pred_sal, F.interpolate(sal_img.unsqueeze(dim=1), size=(pred_sal.shape[-2], pred_sal.shape[-1]))) # for pseudo sal map & saliency map
 
             # total loss
             loss_total = loss_cls + loss_sal
+            
+            # print(type(loss_total))
             
             # loss addition
             avg_meter.add({'loss': loss_total.item()})
