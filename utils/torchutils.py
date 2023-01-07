@@ -103,17 +103,11 @@ def cam2fg_n_bg(cam, sal_img, label, num_classes=20, sal_thres=0.5, tau=0.4):
     label_map_fg[:,:-1] = label_map * valid_channel_map # instead of & or and 
     label_map_bg[:,:-1] = label_map * (~valid_channel_map)
     
-    # print(pred_sal.shape) # torch.Size([8, 21, 64, 64])
-    # print(label_map_fg.shape) # torch.Size([8, 21, 64, 64])
-    # print(label_map_bg.shape)  # torch.Size([8, 21, 64, 64])
-    
     fg = torch.zeros_like(pred_sal).cuda()
     bg = torch.zeros_like(pred_sal).cuda()
-    fg[label_map_fg] = pred_sal[label_map_fg]
-    bg[label_map_fg] = pred_sal[label_map_bg]
     
-    # print(fg.shape) # torch.Size([8192])
-    # print(bg.shape) # torch.Size([81920])
+    fg[label_map_fg] = pred_sal[label_map_fg]
+    bg[label_map_bg] = pred_sal[label_map_bg]
     
     # get right prediction of saliency
     fg = torch.sum(fg, dim=1, keepdim=True).cuda()
