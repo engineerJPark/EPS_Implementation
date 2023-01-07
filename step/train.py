@@ -53,8 +53,8 @@ def train(args):
 
         for step, pack in enumerate(train_data_loader):
             # img, label & cuda
-            img = pack['img'].cuda(non_blocking=True)
-            sal_img = pack['sal_img'].cuda(non_blocking=True)
+            img = pack['img'].cuda(non_blocking=True) # BCHw
+            sal_img = pack['sal_img'].cuda(non_blocking=True) # BHw
             label = pack['label'].cuda(non_blocking=True)
 
             # prediction
@@ -66,7 +66,8 @@ def train(args):
             # saliency loss ... need to be fixed : sal_img should come from dataloader
             fg, bg = torchutils.cam2fg_n_bg(out_cam, sal_img, label) # label should be one hot decoded
             pred_sal = torchutils.psuedo_saliency(fg, bg)
-            loss_sal = F.mse_loss(pred_sal, F.interpolate(sal_img.unsqueeze(dim=1), size=(pred_sal.shape[-2], pred_sal.shape[-1]))) # for pseudo sal map & saliency map
+            loss_sal = F.mse_loss(pred_sal.to(torch.float32), \
+                F.interpolate(sal_img.unsqueeze(dim=1), size=(pred_sal.shape[-2], pred_sal.shape[-1])).to(torch.float32)) # for pseudo sal map & saliency map
 
             # total loss
             loss_total = loss_cls + loss_sal

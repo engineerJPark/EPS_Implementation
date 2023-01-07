@@ -89,11 +89,11 @@ def cam2fg_n_bg(cam, sal_img, label, num_classes=20, sal_thres=0.5, tau=0.4):
     
     # getting saliency map & label map setting
     pred_sal = F.softmax(cam, dim=1)
-    label_map = label.reshape(b, num_classes, 1, 1).expand(b, num_classes, h, w)
+    label_map = label.reshape(b, num_classes, 1, 1).expand(b, num_classes, h, w).bool()
     label_map_fg = torch.zeros((b, num_classes + 1, h, w)).bool().cuda()
     label_map_bg = torch.zeros((b, num_classes + 1, h, w)).bool().cuda()
     label_map_fg[:, :-1] = label_map.clone()
-    label_map_bg[:, num_classes] = True # for summing all element of M_c+1
+    label_map_bg[:, num_classes] = 1 # for summing all element of M_c+1, True
     
     # set overlapping ratio & get right label index for indicating the CAM
 
@@ -105,6 +105,8 @@ def cam2fg_n_bg(cam, sal_img, label, num_classes=20, sal_thres=0.5, tau=0.4):
     
     fg = torch.zeros_like(pred_sal, dtype=torch.float).cuda()
     bg = torch.zeros_like(pred_sal, dtype=torch.float).cuda()
+    
+    # print(label_map_fg.dtype)
     
     fg[label_map_fg] = pred_sal[label_map_fg]
     bg[label_map_bg] = pred_sal[label_map_bg]
