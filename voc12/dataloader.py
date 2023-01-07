@@ -55,13 +55,13 @@ def load_image_label_list_from_xml(img_name_list, voc12_root):
 def load_image_label_list_from_npy(img_name_list):
     return np.array([cls_labels_dict[img_name] for img_name in img_name_list])
 
-def get_img_path(img_name, voc12_root):
+def get_img_path(img_name, data_root):
     if not isinstance(img_name, str):
         img_name = decode_int_filename(img_name)
-    if 'VOC' in voc12_root:
-        return os.path.join(voc12_root, IMG_FOLDER_NAME, img_name + '.jpg')
-    elif 'SAL' in voc12_root:
-        return os.path.join(voc12_root, IMG_FOLDER_NAME, img_name + '.png')
+    if 'VOC' in data_root:
+        return os.path.join(data_root, IMG_FOLDER_NAME, img_name + '.jpg')
+    elif 'SAL' in data_root:
+        return os.path.join(data_root, img_name + '.png')
     else:
         raise("there is no right path")
 

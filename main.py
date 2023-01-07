@@ -12,7 +12,7 @@ if __name__ == '__main__':
     parser.add_argument("--num_workers", default=os.cpu_count()//2, type=int)
     parser.add_argument("--voc12_root", default='dataset/VOCdevkit/VOC2012', type=str,
                         help="Path to VOC 2012 Devkit, must contain ./JPEGImages as subdirectory.")
-    parser.add_argument("--sal_root", default='dataset/SALImage', type=str,
+    parser.add_argument("--sal_root", default='dataset/SALImages', type=str,
                         help="Path to VOC 2012 Devkit, must contain ./SALImage as subdirectory.")
 
     # Dataset
