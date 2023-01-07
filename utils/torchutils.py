@@ -1,4 +1,3 @@
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -84,6 +83,9 @@ def cam2fg_n_bg(cam, sal_img, label, num_classes=20, sal_thres=0.5, tau=0.4):
     num_classes dont include the background
     '''
     b,c,h,w = cam.shape
+    sal_img = F.interpolate(sal_img.unsqueeze(dim=1), size=(h, w)) # .squeeze(dim=1)
+    
+    # print(sal_img.shape)
     
     # getting saliency map & label map setting
     pred_sal = F.softmax(cam, dim=1)
@@ -94,17 +96,30 @@ def cam2fg_n_bg(cam, sal_img, label, num_classes=20, sal_thres=0.5, tau=0.4):
     label_map_bg[:, num_classes] = True # for summing all element of M_c+1
     
     # set overlapping ratio & get right label index for indicating the CAM
-    overlap_ratio = ((pred_sal[:, :-1].detach() > sal_thres) & (sal_img > sal_thres)).reshape(b, num_classes, -1) / \
-        ((pred_sal[:, :-1].detach() > sal_thres) + 1e-5).reshape(b, num_classes, -1) # get overlapping ratio for each channel
+
+    overlap_ratio = ((pred_sal[:, :-1].detach() > sal_thres) & (sal_img > sal_thres)).reshape(b, num_classes, -1).sum(-1) / \
+        ((pred_sal[:, :-1].detach() > sal_thres) + 1e-5).reshape(b, num_classes, -1).sum(-1) # get overlapping ratio for each channel
     valid_channel_map = (overlap_ratio > tau).reshape(b, num_classes, 1, 1).expand(b, num_classes, h, w)
-    label_map_fg[:,:-1] = label_map & valid_channel_map
-    label_map_bg[:,:-1] = label_map & (~valid_channel_map)
+    label_map_fg[:,:-1] = label_map * valid_channel_map # instead of & or and 
+    label_map_bg[:,:-1] = label_map * (~valid_channel_map)
+    
+    # print(pred_sal.shape) # torch.Size([8, 21, 64, 64])
+    # print(label_map_fg.shape) # torch.Size([8, 21, 64, 64])
+    # print(label_map_bg.shape)  # torch.Size([8, 21, 64, 64])
+    
+    fg = torch.zeros_like(pred_sal).cuda()
+    bg = torch.zeros_like(pred_sal).cuda()
+    fg[label_map_fg] = pred_sal[label_map_fg]
+    bg[label_map_fg] = pred_sal[label_map_bg]
+    
+    # print(fg.shape) # torch.Size([8192])
+    # print(bg.shape) # torch.Size([81920])
     
     # get right prediction of saliency
-    fg = torch.sum(pred_sal[label_map_fg], dim=1, keepdim=True).cuda()
-    bg = torch.sum(pred_sal[label_map_bg], dim=1, keepdim=True).cuda()
+    fg = torch.sum(fg, dim=1, keepdim=True).cuda()
+    bg = torch.sum(bg, dim=1, keepdim=True).cuda()
     
-    return fg, bg
+    return (fg, bg)
             
 def psuedo_saliency(fg, bg, lamb = 0.5):
     '''
