@@ -28,7 +28,7 @@ def random_resize_long(img, min_long, max_long):
     img_list = []
     if isinstance(img, tuple) == False : img = (img, )
     for sub_img in img:
-        h, w = img.shape[:2]
+        h, w = sub_img.shape[:2]
 
         if w < h:
             scale = target_long / h
