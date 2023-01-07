@@ -87,6 +87,9 @@ def random_crop(images, cropsize, default_values):
     do random crop, 
     hollow part will be filled with default_values
     '''
+    # print(images.shape)
+    # print(images[1].shape)
+    # print('first:', len(images))
 
     if isinstance(images, np.ndarray): images = (images,)
     if isinstance(default_values, int): default_values = (default_values,)
@@ -96,17 +99,23 @@ def random_crop(images, cropsize, default_values):
 
     new_images = []
     for img, f in zip(images, default_values):
-
         if len(img.shape) == 3:
             cont = np.ones((cropsize, cropsize, img.shape[2]), img.dtype)*f
         else:
             cont = np.ones((cropsize, cropsize), img.dtype)*f
         cont[box[0]:box[1], box[2]:box[3]] = img[box[4]:box[5], box[6]:box[7]]
         new_images.append(cont)
+        
+    # print('second:', len(new_images))
+    # print(type(new_images))
 
     if len(new_images) == 1:
         new_images = new_images[0]
-
+        
+    # print(len(new_images))
+    # print(new_images.shape)
+    # print(type(new_images))
+    
     return new_images
 
 def top_left_crop(img, cropsize, default_value):

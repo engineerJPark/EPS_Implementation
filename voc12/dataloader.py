@@ -71,7 +71,7 @@ def load_img_name_list(dataset_path):
 
 def load_img_id_list(dataset_path):
     return load_img_name_list(dataset_path)
-    
+
 class Normalize:
     def __init__(self, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
         self.mean = mean
@@ -112,7 +112,7 @@ class VOC12ImageDataset(Dataset):
         name = self.img_name_list[idx]
         name_str = decode_int_filename(name)
         img = np.asarray(imageio.imread(get_img_path(name_str, self.voc12_root)))
-        sal_img = np.asarray(imageio.imread(get_img_path(name_str, self.sal_root))) # do the same thing needed
+        sal_img = np.asarray(imageio.imread(get_img_path(name_str, self.sal_root)))[..., 0] # imageio duplicate grayscale image to 3 dimension
 
         # sal_img should be preprocessed at the same method
         if self.resize_long:
@@ -129,14 +129,13 @@ class VOC12ImageDataset(Dataset):
 
         if self.crop_size:
             if self.crop_method == "random":
-                img, sal_img = imutils.random_crop((img, sal_img), self.crop_size, 0)
+                img, sal_img = imutils.random_crop((img, sal_img), self.crop_size, (0, 0)) 
             else:
                 img = imutils.top_left_crop((img), self.crop_size, 0)
                 sal_img = imutils.top_left_crop((sal_img), self.crop_size, 0)
 
         if self.to_torch:
             img = imutils.HWC_to_CHW(img)
-            sal_img = imutils.HWC_to_CHW(sal_img)
 
         return {'name': name_str, 'img': img, 'sal_img': sal_img} # for time when you need img only, use dictionary
 
