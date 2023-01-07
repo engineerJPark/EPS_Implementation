@@ -72,7 +72,7 @@ class BottleneckBlock(nn.Module):
         self.conv_branch2b1 = nn.Conv2d(out_channels//4, out_channels//2, 3, padding=dilation, dilation=dilation, bias=False)
         
         self.bn_branch2b2 = FixedBatchNorm(out_channels//2)
-        self.dropout_2b1 = torch.nn.Dropout2d(dropout)
+        self.dropout_2b2 = torch.nn.Dropout2d(dropout)
         self.conv_branch2b2 = nn.Conv2d(out_channels//2, out_channels, 1, stride, bias=False)
         
         if not self.same_shape:
@@ -205,9 +205,11 @@ class EPS(Net):
         self.from_scratch_layers = [self.conv_cam]
         
     def forward(self, x): # give prediction & CAM 
-        x = super(EPS, self).forward(x)
+        
+        x = super(EPS, self).forward(x)[0] # output is tuple
         x_cam = F.relu(self.conv_cam(x))
-        x = F.adaptive_avg_pool2d(x)
+        
+        x = F.adaptive_avg_pool2d(x, 1)
         x = F.relu(self.conv_cam(x))
         x = x.reshape(x.shape[0], -1)
         return x, x_cam
@@ -228,5 +230,4 @@ class EPS(Net):
                         groups[0].append(m.bias)
         return groups
     
-    # def load_pretrained(self, filename): # get weight from pretrained one. use args.pretrained for filename
-    #     super().load_state_dict(torch.load(filename))
+    
