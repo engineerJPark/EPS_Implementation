@@ -90,15 +90,16 @@ def train(args):
                       'imps:%.1f' % ((step + 1) * args.cam_batch_size / timer.get_stage_elapsed()),
                       'etc:%s' % (timer.str_estimated_complete()), flush=True)
 
-        else:
+        else: # if one epoch is trained with no error
             validate(model, val_data_loader)
             timer.reset_stage()
+            model.module.train()
 
     torch.save(model.module.state_dict(), args.cam_weights_name + '.pth')
 
 
 def validate(model, data_loader):
-    model.eval()
+    model.module.eval()
     print('validating ... ', flush=True, end='')
     val_loss_meter = pyutils.AverageMeter('loss1', 'loss2')
 
@@ -116,9 +117,11 @@ def validate(model, data_loader):
             loss_cls = F.multilabel_soft_margin_loss(out[:, :-1], label) # for predicted label and GT lable
             
             # saliency loss ... need to be fixed : sal_img should come from dataloader
-            fg, bg = imutils.cam2fg_n_bg(out_cam, sal_img, label) # label should be one hot decoded
-            pred_sal = imutils.psuedo_saliency(fg, bg)
-            loss_sal = F.mse_loss(pred_sal, sal_img) # for pseudo sal map & saliency map
+            fg, bg = torchutils.cam2fg_n_bg(out_cam, sal_img, label) # label should be one hot decoded
+            pred_sal = torchutils.psuedo_saliency(fg, bg)
+            # loss_sal = F.mse_loss(pred_sal, sal_img) # for pseudo sal map & saliency map
+            loss_sal = F.mse_loss(pred_sal.to(torch.float32), \
+                F.interpolate(sal_img.unsqueeze(dim=1), size=(pred_sal.shape[-2], pred_sal.shape[-1])).to(torch.float32))
             
             # total loss
             loss_total = loss_cls + loss_sal
