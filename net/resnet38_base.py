@@ -30,8 +30,7 @@ class ResBlock(nn.Module):
     def __init__(self, in_channels, mid_channels, out_channels, stride=1, first_dilation=None, dilation=1):
         super(ResBlock, self).__init__()
         self.same_shape = (in_channels == out_channels and stride == 1)
-        if first_dilation == None: 
-            first_dilation = dilation
+        if first_dilation == None: first_dilation = dilation
         
         self.bn_branch2a = FixedBatchNorm(in_channels)
         self.conv_branch2a = nn.Conv2d(in_channels, mid_channels, 3, stride, padding=first_dilation, dilation=first_dilation, bias=False)
@@ -77,7 +76,7 @@ class BottleneckBlock(nn.Module):
         self.dropout_2b2 = torch.nn.Dropout2d(dropout)
         self.conv_branch2b2 = nn.Conv2d(out_channels//2, out_channels, 1, stride, bias=False)
         
-        if not self.same_shape:
+        if not self.same_shape: # to make shame channel
             self.conv_branch1 = nn.Conv2d(in_channels, out_channels, 1, stride, bias=False)
             
     def forward(self, x, get_x_bn_relu=False):
@@ -134,8 +133,6 @@ class Net(nn.Module):
         self.b6 = BottleneckBlock(1024,2048,dilation=4,dropout=0.3)
         self.b7 = BottleneckBlock(2048,4096,dilation=4,dropout=0.5)
         self.bn7 = nn.BatchNorm2d(4096)
-        
-        # print("Net complete") # for debug 
         
         ###############################################
         # utility
