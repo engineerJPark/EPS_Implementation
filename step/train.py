@@ -69,11 +69,13 @@ def train(args):
             # classification loss
             loss_cls = F.multilabel_soft_margin_loss(out[:, :-1], label) # for predicted label and GT lable
             
+            ### this part is part of the bug
             # saliency loss ... need to be fixed : sal_img should come from dataloader
             fg, bg = cam2fg_n_bg(out_cam, sal_img, label) # label should be one hot decoded
             pred_sal = psuedo_saliency(fg, bg)
             loss_sal = F.mse_loss(pred_sal.to(torch.float32), \
-                F.interpolate(sal_img.unsqueeze(dim=1), size=(pred_sal.shape[-2], pred_sal.shape[-1])).to(torch.float32)) # for pseudo sal map & saliency map
+                F.interpolate(sal_img.unsqueeze(dim=1), \
+                    size=(pred_sal.shape[-2], pred_sal.shape[-1])).to(torch.float32)) # for pseudo sal map & saliency map
 
             # total loss
             loss_total = loss_cls + loss_sal
@@ -82,6 +84,8 @@ def train(args):
             
             # loss addition
             avg_meter.add({'loss': loss_total.item()})
+            avg_meter.add({'loss_cls': loss_cls.item()}) ## debug
+            avg_meter.add({'loss_sal': loss_sal.item()}) ## debug
 
             # backpropagation
             optimizer.zero_grad()
@@ -95,6 +99,8 @@ def train(args):
                       'loss:%.4f' % (avg_meter.pop('loss')),
                       'imps:%.1f' % ((step + 1) * args.cam_batch_size / timer.get_stage_elapsed()),
                       'etc:%s' % (timer.str_estimated_complete()), flush=True)
+                print('loss_cls:%.4f' % (avg_meter.pop('loss_cls'))) ## debug
+                print('loss_sal:%.4f' % (avg_meter.pop('loss_sal'))) ## debug
 
         else: # if one epoch is trained with no error
             validate(model, val_data_loader)

@@ -30,8 +30,8 @@ if __name__ == '__main__':
     parser.add_argument("--pretrained_path", default="savefile/pretrained/resnet38.pth", type=str)
     
     # optimizer
-    parser.add_argument("--lr", default=0.001, type=float) # 0.01
-    parser.add_argument("--wt_dec", default=1e-5, type=float) # 5e-4
+    parser.add_argument("--lr", default=0.01, type=float) # 0.01
+    parser.add_argument("--wt_dec", default=5e-4, type=float) # 5e-4
     parser.add_argument("--max_iters", default=10000, type=int)
 
     # hyper-parameters for EPS
