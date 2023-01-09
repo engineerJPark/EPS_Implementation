@@ -17,7 +17,7 @@ def cam2fg_n_bg(cam, sal_img, label, num_classes=20, sal_thres=0.5, tau=0.4):
     num_classes dont include the background
     '''
     b,c,h,w = cam.shape
-    sal_img = F.interpolate(sal_img.unsqueeze(dim=1), size=(h, w)) # b,1,hw
+    sal_img = F.interpolate(sal_img.unsqueeze(dim=1), size=(h, w)) # B1HW
     
     ## getting saliency map & label map setting
     pred_sal = F.softmax(cam, dim=1)
@@ -53,8 +53,8 @@ def cam2fg_n_bg(cam, sal_img, label, num_classes=20, sal_thres=0.5, tau=0.4):
     
     ## get right prediction of saliency
     ## sum up for all channel dimension
-    fg = torch.sum(fg, dim=1, keepdim=True).cuda()
-    bg = torch.sum(bg, dim=1, keepdim=True).cuda()
+    fg = torch.sum(fg, dim=1, keepdim=True).cuda() # B1HW
+    bg = torch.sum(bg, dim=1, keepdim=True).cuda() # B1HW
     
     return (fg, bg)
             
@@ -64,7 +64,7 @@ def psuedo_saliency(fg, bg, lamb = 0.5):
     getting saliency prediction by prediction of foreground & background
     '''
     pred_sal_map = lamb * fg + (1 - lamb) * (1 - bg)
-    return pred_sal_map
+    return pred_sal_map # B1HW
 
 
 def validate(model, data_loader):
@@ -165,6 +165,7 @@ def run(args):
             # img, label & cuda
             img = pack['img'].cuda(non_blocking=True) # BCHW
             sal_img = pack['sal_img'].cuda(non_blocking=True) # BHW
+            # upsized_sal_img = F.interpolate(sal_img.unsqueeze(dim=1), size=(pred_sal.shape[-2], pred_sal.shape[-1]))
             label = pack['label'].cuda(non_blocking=True)
 
             # prediction
@@ -176,10 +177,9 @@ def run(args):
             ### this part is part of the bug
             # saliency loss ... need to be fixed : sal_img should come from dataloader
             fg, bg = cam2fg_n_bg(out_cam, sal_img, label) # label should be one hot decoded
-            pred_sal = psuedo_saliency(fg, bg)
-            loss_sal = F.mse_loss(pred_sal.to(torch.float32), \
-                F.interpolate(sal_img.unsqueeze(dim=1), \
-                    size=(pred_sal.shape[-2], pred_sal.shape[-1])).to(torch.float32)) # for pseudo sal map & saliency map
+            pred_sal = psuedo_saliency(fg, bg) # B1HW
+            pred_sal = F.interpolate(pred_sal, size=(sal_img.shape[-2], sal_img.shape[-1])) # B1HW
+            loss_sal = F.mse_loss(pred_sal.reshape(-1), sal_img.reshape(-1))
 
             # total loss
             loss_total = loss_cls + loss_sal
