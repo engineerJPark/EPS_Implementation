@@ -27,9 +27,11 @@ class FixedBatchNorm(nn.BatchNorm2d):
 
 # normal residual block
 class ResBlock(nn.Module):
-    def __init__(self, in_channels, mid_channels, out_channels, stride=1, first_dilation=1, dilation=1):
+    def __init__(self, in_channels, mid_channels, out_channels, stride=1, first_dilation=None, dilation=1):
         super(ResBlock, self).__init__()
         self.same_shape = (in_channels == out_channels and stride == 1)
+        if first_dilation == None: 
+            first_dilation = dilation
         
         self.bn_branch2a = FixedBatchNorm(in_channels)
         self.conv_branch2a = nn.Conv2d(in_channels, mid_channels, 3, stride, padding=first_dilation, dilation=first_dilation, bias=False)
