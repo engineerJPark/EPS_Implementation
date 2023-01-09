@@ -1,7 +1,11 @@
-numpy
-cython
-torch>=1.1.0
-torchvision
-mxNet
+Cython==0.29.32
+imageio==2.23.0
+matplotlib-inline==0.1.6
+numpy==1.24.0
+pydensecrf @ git+https://github.com/lucasb-eyer/pydensecrf.git@0d53acbcf5123d4c88040fe68fbb9805fc5b2fb9
+scikit-image==0.19.3
+scipy==1.9.3
+torch==1.13.1
+torchvision==0.14.1
+tqdm @ file:///opt/conda/conda-bld/tqdm_1664392687731/work
 PIL
-opencv-python
