@@ -132,7 +132,7 @@ class Net(nn.Module):
         
         self.b6 = BottleneckBlock(1024,2048,dilation=4,dropout=0.3)
         self.b7 = BottleneckBlock(2048,4096,dilation=4,dropout=0.5)
-        self.bn7 = nn.BatchNorm2d(4096)
+        self.bn7 = FixedBatchNorm(4096)  # self.bn7 = nn.BatchNorm2d(4096)
         
         ###############################################
         # utility
@@ -166,7 +166,7 @@ class Net(nn.Module):
         x = self.b7(x)
         conv6 = F.relu(self.bn7(x))
         
-        return conv6, dict({'conv4':conv4, 'conv5':conv5, 'conv6':conv6})
+        return dict({'conv4':conv4, 'conv5':conv5, 'conv6':conv6})
     
     def train(self, mode=True):
         super().train(mode) # from nn.Module
@@ -179,6 +179,12 @@ class Net(nn.Module):
                     c.weight.requires_grad = False
                     if c.bias is not None:
                         c.bias.requires_grad = False
+                        
+        for layer in self.modules():
+            if isinstance(layer, torch.nn.BatchNorm2d):
+                layer.eval()
+                layer.bias.requires_grad = False
+                layer.weight.requires_grad = False
                         
     def load_pretrained(self, filename): # get weight from pretrained one. use args.pretrained for filename
         self.load_state_dict(torch.load(filename))
@@ -200,7 +206,7 @@ class EPS(Net):
         self.from_scratch_layers = [self.conv_cam]
         
     def forward(self, x): # give prediction & CAM       
-        x = super(EPS, self).forward(x)[0] # output is tuple
+        x = super(EPS, self).forward(x)['conv6'] # output is tuple
         x_cam = self.conv_cam(x)
         x = F.adaptive_avg_pool2d(x_cam, 1)
         x = x.reshape(x.shape[0], -1)

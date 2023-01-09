@@ -59,8 +59,8 @@ def train(args):
 
         for step, pack in enumerate(train_data_loader):
             # img, label & cuda
-            img = pack['img'].cuda(non_blocking=True) # BCHw
-            sal_img = pack['sal_img'].cuda(non_blocking=True) # BHw
+            img = pack['img'].cuda(non_blocking=True) # BCHW
+            sal_img = pack['sal_img'].cuda(non_blocking=True) # BHW
             label = pack['label'].cuda(non_blocking=True)
 
             # prediction
@@ -70,8 +70,8 @@ def train(args):
             loss_cls = F.multilabel_soft_margin_loss(out[:, :-1], label) # for predicted label and GT lable
             
             # saliency loss ... need to be fixed : sal_img should come from dataloader
-            fg, bg = torchutils.cam2fg_n_bg(out_cam, sal_img, label) # label should be one hot decoded
-            pred_sal = torchutils.psuedo_saliency(fg, bg)
+            fg, bg = cam2fg_n_bg(out_cam, sal_img, label) # label should be one hot decoded
+            pred_sal = psuedo_saliency(fg, bg)
             loss_sal = F.mse_loss(pred_sal.to(torch.float32), \
                 F.interpolate(sal_img.unsqueeze(dim=1), size=(pred_sal.shape[-2], pred_sal.shape[-1])).to(torch.float32)) # for pseudo sal map & saliency map
 
@@ -99,10 +99,6 @@ def train(args):
         else: # if one epoch is trained with no error
             validate(model, val_data_loader)
             timer.reset_stage()
-            if torch.cuda.device_count() > 1:
-                model.module.train()
-            else:
-                model.train()
 
     if torch.cuda.device_count() > 1:
         torch.save(model.module.state_dict(), args.cam_weights_name + '.pth')
@@ -134,8 +130,8 @@ def validate(model, data_loader):
             loss_cls = F.multilabel_soft_margin_loss(out[:, :-1], label) # for predicted label and GT lable
             
             # saliency loss ... need to be fixed : sal_img should come from dataloader
-            fg, bg = torchutils.cam2fg_n_bg(out_cam, sal_img, label) # label should be one hot decoded
-            pred_sal = torchutils.psuedo_saliency(fg, bg)
+            fg, bg = cam2fg_n_bg(out_cam, sal_img, label) # label should be one hot decoded
+            pred_sal = psuedo_saliency(fg, bg)
             # loss_sal = F.mse_loss(pred_sal, sal_img) # for pseudo sal map & saliency map
             loss_sal = F.mse_loss(pred_sal.to(torch.float32), \
                 F.interpolate(sal_img.unsqueeze(dim=1), size=(pred_sal.shape[-2], pred_sal.shape[-1])).to(torch.float32))
@@ -146,9 +142,64 @@ def validate(model, data_loader):
             # adding total loss
             val_loss_meter.add({'loss': loss_total.item()})
 
-    print('loss: %.4f' % (val_loss_meter.pop('loss')))
-    model.train()
+    print('validation loss: %.4f' % (val_loss_meter.pop('loss')))
+    
+    if torch.cuda.device_count() > 1:
+        model.module.train()
+    else:
+        model.train()
+    
     return
+
+def cam2fg_n_bg(cam, sal_img, label, num_classes=20, sal_thres=0.5, tau=0.4):
+    '''
+    cam image = localization map for C classes & 1 background, BCHW dimension
+    saliency map = be in torch 
+    image-level label; should be binary index label
+    num_classes dont include the background
+    '''
+    b,c,h,w = cam.shape
+    sal_img = F.interpolate(sal_img.unsqueeze(dim=1), size=(h, w)) # .squeeze(dim=1)
+    
+    # print(sal_img.shape)
+    
+    # getting saliency map & label map setting
+    pred_sal = F.softmax(cam, dim=1)
+    label_map = label.reshape(b, num_classes, 1, 1).expand(b, num_classes, h, w).bool()
+    label_map_fg = torch.zeros((b, num_classes + 1, h, w)).bool().cuda()
+    label_map_bg = torch.zeros((b, num_classes + 1, h, w)).bool().cuda()
+    label_map_fg[:, :-1] = label_map.clone()
+    label_map_bg[:, num_classes] = 1 # for summing all element of M_c+1, True
+    
+    # set overlapping ratio & get right label index for indicating the CAM
+
+    overlap_ratio = ((pred_sal[:, :-1].detach() > sal_thres) * (sal_img > sal_thres)).reshape(b, num_classes, -1).sum(-1) / \
+        ((pred_sal[:, :-1].detach() > sal_thres) + 1e-5).reshape(b, num_classes, -1).sum(-1) # get overlapping ratio for each channel, use * instead of &
+    valid_channel_map = (overlap_ratio > tau).reshape(b, num_classes, 1, 1).expand(b, num_classes, h, w)
+    label_map_fg[:,:-1] = label_map * valid_channel_map # instead of & or and 
+    label_map_bg[:,:-1] = label_map * (~valid_channel_map)
+    
+    fg = torch.zeros_like(pred_sal, dtype=torch.float).cuda()
+    bg = torch.zeros_like(pred_sal, dtype=torch.float).cuda()
+    
+    # print(label_map_fg.dtype)
+    
+    fg[label_map_fg] = pred_sal[label_map_fg]
+    bg[label_map_bg] = pred_sal[label_map_bg]
+    
+    # get right prediction of saliency
+    fg = torch.sum(fg, dim=1, keepdim=True).cuda()
+    bg = torch.sum(bg, dim=1, keepdim=True).cuda()
+    
+    return (fg, bg)
+            
+def psuedo_saliency(fg, bg, lamb = 0.5):
+    '''
+    use with cam2fg_n_bg
+    getting saliency prediction by prediction of foreground & background
+    '''
+    pred_sal_map = lamb*fg + (1 - lamb)*(1 - bg)
+    return pred_sal_map
 
 def run(args):
     train(args)
