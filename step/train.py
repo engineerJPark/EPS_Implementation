@@ -33,11 +33,16 @@ def train(args):
     if torch.cuda.device_count() > 1:
         print("There are(is)", torch.cuda.device_count(), "GPUs!")
         model = nn.DataParallel(model)
-    model.cuda()
-    model.module.train()
-
+        model.cuda()
+        model.module.train()
+        param_groups = model.module.get_parameter_groups()
+    else:
+        print("There are(is) only 1 GPUs!")
+        model.cuda()
+        model.train()
+        param_groups = model.get_parameter_groups()
+    
     # parameter call & optimizer setting
-    param_groups = model.module.get_parameter_groups() # is it okay?
     optimizer = torchutils.PolyOptimizer([
         {'params': param_groups[0], 'lr': args.lr, 'weight_decay': args.wt_dec},
         {'params': param_groups[1], 'lr': 2*args.lr, 'weight_decay': 0},
@@ -94,13 +99,24 @@ def train(args):
         else: # if one epoch is trained with no error
             validate(model, val_data_loader)
             timer.reset_stage()
-            model.module.train()
+            if torch.cuda.device_count() > 1:
+                model.module.train()
+            else:
+                model.train()
 
-    torch.save(model.module.state_dict(), args.cam_weights_name + '.pth')
+    if torch.cuda.device_count() > 1:
+        torch.save(model.module.state_dict(), args.cam_weights_name + '.pth')
+    else:
+        torch.save(model.state_dict(), args.cam_weights_name + '.pth')
+    
 
 
 def validate(model, data_loader):
-    model.module.eval()
+    if torch.cuda.device_count() > 1:
+        model.module.eval()
+    else:
+        model.eval()
+    
     print('validating ... ', flush=True, end='')
     val_loss_meter = pyutils.AverageMeter('loss1', 'loss2')
 
