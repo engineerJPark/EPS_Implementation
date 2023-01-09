@@ -38,18 +38,15 @@ class ResBlock(nn.Module):
         self.bn_branch2b1 = FixedBatchNorm(mid_channels)
         self.conv_branch2b1 = nn.Conv2d(mid_channels, out_channels, 3, padding=dilation, dilation=dilation, bias=False)
         
-        if not self.same_shape:
+        if not self.same_shape: # to make shame channel
             self.conv_branch1 = nn.Conv2d(in_channels, out_channels, 1, stride, bias=False)
             
     def forward(self, x, get_x_bn_relu=False):
         branch2 = F.relu(self.bn_branch2a(x))
         x_bn_relu = branch2
         
-        if not self.same_shape:
-            branch1 = self.conv_branch1(branch2)
-        else:
-            branch1 = x
-            
+        branch1 = self.conv_branch1(branch2) if not self.same_shape else x
+        
         branch2 = self.conv_branch2a(branch2)
         branch2 = F.relu(self.bn_branch2b1(branch2))
         branch2 = self.conv_branch2b1(branch2)
