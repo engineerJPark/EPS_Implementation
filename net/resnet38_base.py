@@ -188,10 +188,7 @@ class Net(nn.Module):
 class EPS(Net):
     def __init__(self, num_classes, filename=None):
         super().__init__()
-        if filename is not None:
-            super().load_pretrained(filename)
-        else:
-            pass
+        if filename is not None: self.load_pretrained(filename)
         
         self.conv_cam = nn.Conv2d(4096, num_classes + 1, 1, bias=False) # background -> +1
         torch.nn.init.xavier_uniform_(self.conv_cam.weight)
@@ -226,4 +223,7 @@ class EPS(Net):
                         groups[3].append(m.weight)
                     else:
                         groups[1].append(m.weight)
-        return groups    
+        return groups
+    
+    def load_pretrained(self, filename): # get weight from pretrained one. use args.pretrained for filename
+        super().load_state_dict(torch.load(filename))
