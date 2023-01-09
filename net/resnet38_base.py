@@ -203,30 +203,28 @@ class EPS(Net):
         self.not_training = [self.conv1a, self.b2, self.b2_1, self.b2_2]
         self.from_scratch_layers = [self.conv_cam]
         
-    def forward(self, x): # give prediction & CAM 
-        
+    def forward(self, x): # give prediction & CAM       
         x = super(EPS, self).forward(x)[0] # output is tuple
-        x_cam = F.relu(self.conv_cam(x))
-        
-        x = F.adaptive_avg_pool2d(x, 1)
-        x = F.relu(self.conv_cam(x))
+        x_cam = self.conv_cam(x)
+        x = F.adaptive_avg_pool2d(x_cam, 1)
         x = x.reshape(x.shape[0], -1)
-        return x, x_cam
+        
+        return x, x_cam # prediction score & CAM
     
     def get_parameter_groups(self):
         groups = ([],[],[],[]) # 2 grad false, 2 grad true
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
+                # for weight
                 if m.weight.requires_grad == True:
-                    groups[2].append(m.weight)
-                else:
-                    groups[0].append(m.weight)
-                    
-                if m.bias is not None:
-                    if m.bias.requires_grad == True:
-                        groups[2].append(m.bias)
+                    if m in self.from_scratch_layers:
+                        groups[2].append(m.weight)
                     else:
-                        groups[0].append(m.bias)
-        return groups
-    
-    
+                        groups[0].append(m.weight)
+                # for bias
+                if m.bias != None and m.bias.requires_grad == True:
+                    if m in self.from_scratch_layers:
+                        groups[3].append(m.weight)
+                    else:
+                        groups[1].append(m.weight)
+        return groups    
