@@ -195,10 +195,9 @@ class EPS(Net):
             pass
         
         self.conv_cam = nn.Conv2d(4096, num_classes + 1, 1, bias=False) # background -> +1
-        torch.nn.init.kaiming_uniform_(self.conv_cam.weight)
-        
-        # print("EPS complete") # for debug
-        
+        torch.nn.init.xavier_uniform_(self.conv_cam.weight)
+        # torch.nn.init.kaiming_uniform_(self.conv_cam.weight)
+                
         ###############################################
         # utility
         self.not_training = [self.conv1a, self.b2, self.b2_1, self.b2_2]

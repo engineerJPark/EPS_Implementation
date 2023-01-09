@@ -21,8 +21,6 @@ def train(args):
     val_data_loader = DataLoader(val_dataset, batch_size=args.cam_batch_size,
                                  shuffle=False, num_workers=args.num_workers, pin_memory=True, drop_last=True)
     
-    
-    
     # getting max_iteration
     max_step = (len(train_dataset) // args.cam_batch_size) * args.cam_num_epoches
     
