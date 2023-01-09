@@ -25,8 +25,11 @@ def train(args):
     max_step = (len(train_dataset) // args.cam_batch_size) * args.cam_num_epoches
     
     # model setting & train mode
-    model = EPS(args.num_classes, args.pretrained_path) # model = getattr(importlib.import_module('net.resnet38_base'), 'EPS')(args.num_classes)
+    model = EPS(args.num_classes, args.pretrained_path) 
+    
+    # model = getattr(importlib.import_module('net.resnet38_base'), 'EPS')(args.num_classes)
     # model.load_pretrained(args.pretrained_path)
+    
     if torch.cuda.device_count() > 1:
         print("There are(is)", torch.cuda.device_count(), "GPUs!")
         model = nn.DataParallel(model)

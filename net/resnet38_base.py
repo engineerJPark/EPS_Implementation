@@ -3,6 +3,7 @@ from torch import nn
 import torch.nn.functional as F
 import numpy as np
 
+# Function for Normalizing Images
 class Normalize:
     def __init__(self, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
         self.mean = mean
@@ -18,11 +19,13 @@ class Normalize:
         normalized_img[:, :, 2] = (img_arr[:, :, 2] / 255. - self.mean[2]) / self.std[2]
         return normalized_img
 
+# batch norm should be fixed in fine tune for WSSS
 class FixedBatchNorm(nn.BatchNorm2d):
     def forward(self, input):
         return F.batch_norm(input, self.running_mean, self.running_var, self.weight, self.bias,
                             training=False, eps=self.eps)
 
+# normal residual block
 class ResBlock(nn.Module):
     def __init__(self, in_channels, mid_channels, out_channels, stride=1, first_dilation=1, dilation=1):
         super(ResBlock, self).__init__()
