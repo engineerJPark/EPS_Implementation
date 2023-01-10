@@ -37,7 +37,8 @@ def load_image_label_from_xml(img_name, voc12_root='./dataset/VOCdevkit/VOC2012'
     '''
     from xml.dom import minidom
 
-    elem_list = minidom.parse(os.path.join(voc12_root, ANNOT_FOLDER_NAME, decode_int_filename(img_name) + '.xml')).getElementsByTagName('name')
+    elem_list = minidom.parse(os.path.join(voc12_root, ANNOT_FOLDER_NAME, decode_int_filename(img_name) + '.xml'))\
+        .getElementsByTagName('name')
 
     multi_cls_lab = np.zeros((N_CAT), np.float32)
 
@@ -123,6 +124,9 @@ class VOC12ImageDataset(Dataset):
 
         if self.img_normal: # img alone
             img = self.img_normal(img)
+            sal_img = sal_img / 255.
+            # sal_img = (sal_img - np.min(sal_img)) / (np.max(sal_img) - np.min(sal_img))
+            # sal_img = (sal_img / 255. - 0.2222) / 0.3770 # or just softmax
 
         if self.hor_flip:
             img, sal_img = imutils.random_lr_flip((img, sal_img))
