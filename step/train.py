@@ -157,7 +157,7 @@ def run(args):
             out, out_cam = model(img)
             out_cam = F.softmax(out_cam, dim=1)
             b, _, h, w = out_cam.shape # get original size
-            sal_img = F.interpolate(sal_img.unsqueeze(dim=1), size=(h, w)).squeeze(dim=1)
+            sal_img = F.interpolate(sal_img.unsqueeze(dim=1), size=(h, w))
             
             # classification loss
             loss_cls = F.multilabel_soft_margin_loss(out[:, :-1], label) # for predicted label and GT lable
@@ -165,7 +165,7 @@ def run(args):
             ## this part is part of the bug    
             fg, bg = cam2fg_n_bg(out_cam, sal_img, label) # label should be one hot decoded
             pred_sal = psuedo_saliency(fg, bg)
-            loss_sal = F.mse_loss(pred_sal, sal_img)
+            loss_sal = F.mse_loss(pred_sal, sal_img.squeeze(dim=1))
 
             # total loss
             loss_total = loss_cls + loss_sal
