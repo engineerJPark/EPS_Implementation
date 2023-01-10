@@ -17,39 +17,22 @@ def cam2fg_n_bg(cam, sal_img, label, num_classes=20, sal_thres=0.5, tau=0.4):
     num_classes dont include the background
     '''
     b,c,h,w = cam.shape
+    pred_sal = F.softmax(cam, dim=1) ## getting saliency map & label map setting
     sal_img = F.interpolate(sal_img.unsqueeze(dim=1), size=(h, w)) # B1HW
+    sal_img = sal_img.expand(b, num_classes, h, w).bool()
     
-    ## getting saliency map & label map setting
-    pred_sal = F.softmax(cam, dim=1)
-    
-    # label_map = label.reshape(b, num_classes, 1, 1).expand(b, num_classes, h, w).bool()
     fg = torch.zeros((b, num_classes + 1, h, w)).bool().cuda()
     bg = torch.zeros((b, num_classes + 1, h, w)).bool().cuda()
-    # label_map_fg[:, :-1] = label_map.clone() # get rid of bg channel 
-    # label_map_bg[:, num_classes] = 1 # for summing all element of M_c+1, True
-    # label_map_bg[:, num_classes] = cam[:, -1] # for summing all element of M_c+1, True
     
-    ## set overlapping ratio & get right label index for indicating the CAM
-    ## get overlapping ratio for each channel, use * instead of &
+    ## set overlapping ratio  for each channel & get right label index for indicating the CAM
     ## sum up for each channel -> get ratio for each channel
     overlap_ratio = ((pred_sal[:, :-1] > sal_thres) * (sal_img > sal_thres)).reshape(b, num_classes, -1).sum(-1) / \
         ((pred_sal[:, :-1] > sal_thres) + 1e-5).reshape(b, num_classes, -1).sum(-1) 
-    valid_channel_map = (overlap_ratio > tau).reshape(b, num_classes, 1, 1).expand(b, num_classes, h, w)
+    fg_channel = (overlap_ratio > tau).reshape(b, num_classes, 1, 1).expand(b, num_classes, h, w)
     
-    ## set fg & bg
-    ## instead of & or and use * here
-    # label_map_fg[:,:-1] = label_map * valid_channel_map # last channel is bg
-    # label_map_bg[:,:-1] = label_map * (~valid_channel_map) # last channel is bg
-    # label_map_bg[:, num_classes] = 1 # for summing all element of M_c+1, True
-    
-    fg[:,:-1] = pred_sal[:, :-1] * valid_channel_map # last channel is bg
-    bg[:,:-1] = pred_sal[:, :-1] * (~valid_channel_map) # last channel is bg
-    bg[:, num_classes] = pred_sal[:, -1] # for summing all element of M_c+1, True
-    
-    # fg = torch.zeros_like(pred_sal, dtype=torch.float).cuda()
-    # bg = torch.zeros_like(pred_sal, dtype=torch.float).cuda()
-    # fg[label_map_fg] = pred_sal[label_map_fg]
-    # bg[label_map_bg] = pred_sal[label_map_bg]
+    fg[:,:-1] = pred_sal[:, :-1] * fg_channel # last channel is bg
+    bg[:,:-1] = pred_sal[:, :-1] * (~fg_channel) # last channel is bg
+    bg[:,-1] = pred_sal[:, -1] # for summing all element of M_c+1, True
     
     ## get right prediction of saliency
     ## sum up for all channel dimension
