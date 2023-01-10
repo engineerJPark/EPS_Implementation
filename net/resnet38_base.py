@@ -205,7 +205,7 @@ class EPS(Net):
         self.not_training = [self.conv1a, self.b2, self.b2_1, self.b2_2]
         self.from_scratch_layers = [self.conv_cam]
         
-    def forward(self, x): # give prediction & CAM       
+    def forward(self, x): # give prediction & CAM
         x = super(EPS, self).forward(x)['conv6'] # output is tuple
         x_cam = self.conv_cam(x)
         x = F.adaptive_avg_pool2d(x_cam, 1)

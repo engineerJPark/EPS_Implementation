@@ -16,10 +16,12 @@ def cam2fg_n_bg(cam, sal_img, label, num_classes=20, sal_thres=0.5, tau=0.4):
     image-level label; should be binary index label
     num_classes dont include the background
     '''
-    b,h,w = sal_img.shape # sal_img is BHW
     pred_sal = F.softmax(cam, dim=1) ## getting saliency map & label map setting
-    pred_sal = F.interpolate(pred_sal, size=(h, w)) # BCHW
-    sal_img = sal_img.unsqueeze(dim=1).expand(b, num_classes, h, w).bool()
+    b,_,h,w = cam.shape
+    sal_img = F.interpolate(sal_img, size=(h, w)) # BCHW
+    # b,h,w = sal_img.shape # sal_img is BHW
+    # pred_sal = F.interpolate(pred_sal, size=(h, w)) # BCHW
+    sal_img = sal_img.unsqueeze(dim=1) # .expand(b, num_classes, h, w).bool()
     
     fg = torch.zeros((b, num_classes + 1, h, w)).bool().cuda()
     bg = torch.zeros((b, num_classes + 1, h, w)).bool().cuda()
@@ -30,24 +32,17 @@ def cam2fg_n_bg(cam, sal_img, label, num_classes=20, sal_thres=0.5, tau=0.4):
         ((pred_sal[:, :-1] > sal_thres) + 1e-5).reshape(b, num_classes, -1).sum(-1) 
     fg_channel = (overlap_ratio > tau).reshape(b, num_classes, 1, 1).expand(b, num_classes, h, w)
     
-    # print("overlap_ratio, fg_channel")
-    # print(overlap_ratio.shape) ## debug
-    # print(fg_channel.shape) ## debug
-    
     fg[:,:-1] = pred_sal[:, :-1] * fg_channel # valid channel for fg
     bg[:,:-1] = pred_sal[:, :-1] * (~fg_channel) # valid channel for bg
     bg[:,-1] = pred_sal[:, -1] # for summing all element of M_c+1, True
     
     ## get right prediction of saliency
     ## sum up for all channel dimension
+    b_,_,h_,w_ = sal_img.shape # sal_img is BHW
     fg = torch.sum(fg, dim=1).cuda() # BHW
     bg = torch.sum(bg, dim=1).cuda() # BHW
     
-    # print("fg, bg")
-    # print(fg.shape) ## debug
-    # print(bg.shape) ## debug
-    
-    return (fg, bg)
+    return fg, bg
 
 
 def psuedo_saliency(fg, bg, lamb = 0.5):
@@ -160,7 +155,6 @@ def run(args):
             # img, label & cuda
             img = pack['img'].cuda(non_blocking=True) # BCHW
             sal_img = pack['sal_img'].cuda(non_blocking=True) # BHW
-            b, h, w = sal_img.shape # get original size
             label = pack['label'].cuda(non_blocking=True)
 
             # print("sal_img")
@@ -169,20 +163,18 @@ def run(args):
             # prediction
             out, out_cam = model(img)
             out_cam = F.softmax(out_cam, dim=1)
+            b, _, h, w = out_cam.shape # get original size
             
             # classification loss
             loss_cls = F.multilabel_soft_margin_loss(out[:, :-1], label) # for predicted label and GT lable
             
             ### this part is part of the bug
-            # saliency loss ... need to be fixed : sal_img should come from dataloader
-            
-            # print("outcam, salimg==============")
-            # print(torch.unique(out_cam))
-            # print(torch.unique(sal_img))
-            
+            # saliency loss ... need to be fixed : sal_img should come from dataloader            
             fg, bg = cam2fg_n_bg(out_cam, sal_img, label) # label should be one hot decoded
             pred_sal = psuedo_saliency(fg, bg)
-            loss_sal = F.mse_loss(pred_sal, sal_img)
+            loss_sal = F.mse_loss(
+                pred_sal,
+                F.interpolate(sal_img, size=(h, w)))
 
             # total loss
             loss_total = loss_cls + loss_sal

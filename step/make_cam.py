@@ -108,7 +108,7 @@ def predict_cam(model, image, label, gpu, network_type, args):
         with torch.no_grad():
             image = torch.from_numpy(image).unsqueeze(0)
             image = image.cuda(gpu)
-            cam = model.forward_cam(image)
+            _, cam = model.forward(image)
 
             cam = F.softmax(cam, dim=1) # softmax in channel dimension
             cam = F.interpolate(cam, original_image_size, mode='bilinear', align_corners=False)[0] # resize to original image
