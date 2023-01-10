@@ -212,12 +212,13 @@ def infer_cam_mp(process_id, image_ids, label_list, cur_gpu, args):
 
 
 def main_mp(args):
+    # skip already saved one
     image_ids = load_img_id_list(args.infer_list)
-    label_list = load_image_label_list_from_npy(image_ids, args.dataset)
+    label_list = load_image_label_list_from_npy(image_ids) # args.dataset
     n_total_images = len(image_ids)
     assert len(image_ids) == len(label_list)
 
-    saved_list = sorted([file[:-4] for file in os.listdir(args.save_type[0])]) ## get CAM npy or png
+    saved_list = sorted([file[:-4] for file in os.listdir(args.cam_out_dir)]) ## get CAM npy or png. save_type[0]
     n_saved_images = len(saved_list)
     new_image_ids = list()
     new_label_list = list()
@@ -272,7 +273,7 @@ def main_mp(args):
 
 def run(args):
     crf_alpha = (4, 32) # for low background constraint, alpha 4, strong background constraint, alpha 32
-    args = parse_args(args)
+    # args = parse_args(args)
 
     # n_gpus = args.n_gpus
     # scales = (0.5, 1.0, 1.5, 2.0)

@@ -82,7 +82,7 @@ def run(args):
     st = time.time()
     for idx, img_id in tqdm(enumerate(img_ids)):
         gt_path = os.path.join(args.gt_dir, img_id + postfix)
-        pred_path = os.path.join(args.pred_dir, img_id + '.png')
+        pred_path = os.path.join(args.pred_dir, img_id + postfix)
         # pred_path = os.path.join(args.pred_dir, img_id + '.npy')
 
         gt = Image.open(gt_path) # HW
