@@ -157,7 +157,7 @@ def run(args):
             out, out_cam = model(img)
             out_cam = F.softmax(out_cam, dim=1)
             b, _, h, w = out_cam.shape # get original size
-            sal_img = F.interpolate(sal_img.unsqueeze(dim=1), size=(h, w))
+            sal_img = F.interpolate(sal_img.unsqueeze(dim=1), size=(h, w)).squeeze(dim=1)
             
             # classification loss
             loss_cls = F.multilabel_soft_margin_loss(out[:, :-1], label) # for predicted label and GT lable
