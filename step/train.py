@@ -48,8 +48,6 @@ def psuedo_saliency(fg, bg, lamb = 0.5):
     '''
     pred_sal_map = lamb * fg + (1 - lamb) * (1 - bg)
     
-    # print(pred_sal_map.shape) ## debug
-    
     return pred_sal_map # BHW
 
 
@@ -60,35 +58,40 @@ def validate(model, data_loader):
         model.eval()
     
     print('validating ... ', flush=True, end='')
-    val_loss_meter = pyutils.AverageMeter('loss1', 'loss2')
+    val_loss_meter = pyutils.AverageMeter()
 
     with torch.no_grad():
         for pack in data_loader:
             # img, label & cuda
-            img = pack['img'].cuda(non_blocking=True)
-            sal_img = pack['sal_img'].cuda(non_blocking=True)
+            img = pack['img'].cuda(non_blocking=True) # BCHW
+            sal_img = pack['sal_img'].cuda(non_blocking=True) # BHW
             label = pack['label'].cuda(non_blocking=True)
-            
+     
             # prediction
             out, out_cam = model(img)
+            out_cam = F.softmax(out_cam, dim=1)
+            b, _, h, w = out_cam.shape # get original size
+            sal_img = F.interpolate(sal_img.unsqueeze(dim=1), size=(h, w))
             
             # classification loss
             loss_cls = F.multilabel_soft_margin_loss(out[:, :-1], label) # for predicted label and GT lable
             
-            # saliency loss ... need to be fixed : sal_img should come from dataloader
+            ## this part is part of the bug    
             fg, bg = cam2fg_n_bg(out_cam, sal_img, label) # label should be one hot decoded
             pred_sal = psuedo_saliency(fg, bg)
-            # loss_sal = F.mse_loss(pred_sal, sal_img) # for pseudo sal map & saliency map
-            loss_sal = F.mse_loss(pred_sal.to(torch.float32), \
-                F.interpolate(sal_img.unsqueeze(dim=1), size=(pred_sal.shape[-2], pred_sal.shape[-1])).to(torch.float32))
-            
+            loss_sal = F.mse_loss(pred_sal, sal_img.squeeze(dim=1))
+
             # total loss
             loss_total = loss_cls + loss_sal
 
             # adding total loss
             val_loss_meter.add({'loss': loss_total.item()})
+            val_loss_meter.add({'loss_cls': loss_cls.item()}) ## debug
+            val_loss_meter.add({'loss_sal': loss_sal.item()}) ## debug
 
-    print('validation loss: %.4f' % (val_loss_meter.pop('loss')))
+    print('validation loss_total: %.4f' % (val_loss_meter.pop('loss')))
+    print('validation loss_cls: %.4f' % (val_loss_meter.pop('loss_cls')))
+    print('validation loss_sal: %.4f' % (val_loss_meter.pop('loss_sal')))
     
     if torch.cuda.device_count() > 1:
         model.module.train()
@@ -182,7 +185,7 @@ def run(args):
             loss_total.backward()
             optimizer.step()
 
-            if (optimizer.global_step-1)%100 == 0:
+            if (optimizer.global_step-1)%10 == 0:
                 timer.update_progress(optimizer.global_step / max_step)
 
                 print('step:%5d/%5d' % (optimizer.global_step - 1, max_step),

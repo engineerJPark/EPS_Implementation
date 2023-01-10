@@ -132,7 +132,7 @@ class Net(nn.Module):
         
         self.b6 = BottleneckBlock(1024,2048,dilation=4,dropout=0.3)
         self.b7 = BottleneckBlock(2048,4096,dilation=4,dropout=0.5)
-        self.bn7 = FixedBatchNorm(4096)  # self.bn7 = nn.BatchNorm2d(4096)
+        self.bn7 = nn.BatchNorm2d(4096)
         
         ###############################################
         # utility
