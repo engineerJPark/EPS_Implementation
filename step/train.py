@@ -176,9 +176,9 @@ def run(args):
             ### this part is part of the bug
             # saliency loss ... need to be fixed : sal_img should come from dataloader
             
-            print("outcam, salimg==============")
-            print(torch.unique(out_cam))
-            print(torch.unique(sal_img))
+            # print("outcam, salimg==============")
+            # print(torch.unique(out_cam))
+            # print(torch.unique(sal_img))
             
             fg, bg = cam2fg_n_bg(out_cam, sal_img, label) # label should be one hot decoded
             pred_sal = psuedo_saliency(fg, bg)
