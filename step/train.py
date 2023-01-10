@@ -194,10 +194,11 @@ def run(args):
                       'etc:%s' % (timer.str_estimated_complete()), flush=True)
                 print('loss_cls:%.4f' % (avg_meter.pop('loss_cls'))) ## debug
                 print('loss_sal:%.4f' % (avg_meter.pop('loss_sal'))) ## debug
-
-        else: # if one epoch is trained with no error
-            validate(model, val_data_loader)
-            timer.reset_stage()
+        timer.reset_stage()
+        
+    else: # if one epoch is trained with no error
+        validate(model, val_data_loader)
+            
 
     if torch.cuda.device_count() > 1:
         torch.save(model.module.state_dict(), args.cam_weights_name + '.pth')
