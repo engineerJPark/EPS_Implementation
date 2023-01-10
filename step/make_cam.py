@@ -14,7 +14,7 @@ from torch.multiprocessing import Process
 from utils import imutils, pyutils
 from utils.imutils import HWC_to_CHW
 from net.resnet38_base import Normalize
-from voc12.dataloader import load_img_id_list, load_img_label_list_from_npy
+from voc12.dataloader import load_img_id_list, load_image_label_list_from_npy
 
 
 start = time.time()
@@ -213,7 +213,7 @@ def infer_cam_mp(process_id, image_ids, label_list, cur_gpu, args):
 
 def main_mp(args):
     image_ids = load_img_id_list(args.infer_list)
-    label_list = load_img_label_list_from_npy(image_ids, args.dataset)
+    label_list = load_image_label_list_from_npy(image_ids, args.dataset)
     n_total_images = len(image_ids)
     assert len(image_ids) == len(label_list)
 

@@ -201,6 +201,6 @@ def run(args):
             
 
     if torch.cuda.device_count() > 1:
-        torch.save(model.module.state_dict(), args.cam_weights_name + '.pth')
+        torch.save(model.module.state_dict(), args.cam_weights_name)
     else:
-        torch.save(model.state_dict(), args.cam_weights_name + '.pth')
+        torch.save(model.state_dict(), args.cam_weights_name)
