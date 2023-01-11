@@ -171,14 +171,15 @@ def infer_cam_mp(process_id, image_ids, label_list, cur_gpu, args):
             # else:
             #     raise Exception('No appropriate model type')
             
+            ''' strange '''
             cam_np = np.array(cam_list)
             cam_fg = cam_np[:, 0]
             sum_cam = np.sum(cam_fg, axis=0)
             norm_cam = sum_cam / (np.max(sum_cam, (1, 2), keepdims=True) + 1e-5) # normalize for each cam for each row
 
             cam_dict = {}
-            for j in range(args.num_classes): # save cam for all classes
-                if label[j] > 1e-5: # for valid labels only
+            for j in range(args.num_classes): # save for valid labels only
+                if label[j] > 1e-5:
                     cam_dict[j] = norm_cam[j] # cam dict dim : CHW, C is valid label. key=valid label, value=valid cam
 
             ## give threshold and save to png

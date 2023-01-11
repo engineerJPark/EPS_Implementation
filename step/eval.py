@@ -82,14 +82,16 @@ def run(args):
     st = time.time()
     for idx, img_id in tqdm(enumerate(img_ids)):
         gt_path = os.path.join(args.gt_dir, img_id + postfix)
-        pred_path = os.path.join(args.cam_out_dir, img_id + postfix)
+        pred_path = os.path.join(args.cam_png, img_id + postfix)
         # pred_path = os.path.join(args.cam_out_dir, img_id + '.npy')
 
         gt = Image.open(gt_path) # HW
+        # gt = np.load().items()
         w, h = gt.size[0], gt.size[1]
         gt = np.array(gt, dtype=np.uint8)  # shape = [h, w], 0-20 is classes, 255 is ingore boundary
 
         pred = Image.open(pred_path)
+        # pred = np.load().items()
         pred = pred.crop((0, 0, w, h))
         pred = np.array(pred, dtype=np.uint8)  # shape = [h, w]
         mIOU.add_batch(pred, gt)

@@ -70,8 +70,8 @@ if __name__ == '__main__':
     # Class Activation Map parameter
     parser.add_argument("--cam_scales", default=(1.0, 0.5, 1.5, 2.0),
                         help="Multi-scale inferences")
-    parser.add_argument("--cam_npy", default="savefile/result/cam", type=str) # "savefile/result/cam" , separate two of them by .npy & .png
-    parser.add_argument("--cam_png", default=None, type=str) # "savefile/result/cam" , 
+    parser.add_argument("--cam_npy", default="savefile/result/cam_npy", type=str) # "savefile/result/cam" , separate two of them by .npy & .png
+    parser.add_argument("--cam_png", default="savefile/result/cam_png", type=str) # "savefile/result/cam" , 
     parser.add_argument("--cam_thres", default=0.20, type=float)
 
     ### CRF parameter
@@ -83,7 +83,7 @@ if __name__ == '__main__':
     parser.add_argument("--log_name", default="sample_train_eval", type=str)
     parser.add_argument('--eval_save_path', default='eval_log.txt', type=str)
     parser.add_argument("--cam_weights_name", default="savefile/pretrained/resnet38_eps.pth", type=str)
-    parser.add_argument("--cam_out_dir", default="savefile/result/cam", type=str) # npy path
+    parser.add_argument("--cam_out_dir", default="savefile/result/cam_npy", type=str) # npy path
     
     # Step
     parser.add_argument("--train_pass", default=True)
