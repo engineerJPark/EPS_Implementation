@@ -53,6 +53,10 @@ if __name__ == '__main__':
     parser.add_argument("--num_classes", default=20, type=int)
     parser.add_argument("--pretrained_path", default="savefile/pretrained/resnet38.pth", type=str)
     
+    ## Augmentation
+    parser.add_argument("--batch_size", default=8, type=int)
+    parser.add_argument("--crop_size", default=448, type=int)
+    parser.add_argument("--resize_size", default=(256, 512), type=int, nargs='*')
     
     # optimizer
     parser.add_argument("--lr", default=0.01, type=float) # 0.01
@@ -68,7 +72,7 @@ if __name__ == '__main__':
                         help="Multi-scale inferences")
     parser.add_argument("--cam_npy", default="savefile/result/cam", type=str) # "savefile/result/cam" , separate two of them by .npy & .png
     parser.add_argument("--cam_png", default=None, type=str) # "savefile/result/cam" , 
-    parser.add_argument("--thr", default=0.20, type=float)
+    parser.add_argument("--cam_thres", default=0.20, type=float)
 
     ### CRF parameter
     parser.add_argument("--crf", default=None, type=str)
@@ -81,7 +85,6 @@ if __name__ == '__main__':
     parser.add_argument("--cam_weights_name", default="savefile/pretrained/resnet38_eps.pth", type=str)
     parser.add_argument("--cam_out_dir", default="savefile/result/cam", type=str) # npy path
     
-
     # Step
     parser.add_argument("--train_pass", default=True)
     parser.add_argument("--make_cam_pass", default=True)
@@ -94,11 +97,6 @@ if __name__ == '__main__':
     os.makedirs("savefile/result", exist_ok=True)
     os.makedirs("savefile/result/cam_on_img", exist_ok=True)
     os.makedirs(args.cam_out_dir, exist_ok=True)
-    
-    
-    # os.makedirs(args.ir_label_out_dir, exist_ok=True)
-    # os.makedirs(args.sem_seg_out_dir, exist_ok=True)
-    # os.makedirs(args.ins_seg_out_dir, exist_ok=True)
 
     pyutils.Logger(args.log_save_path + '.log')
     print(vars(args))

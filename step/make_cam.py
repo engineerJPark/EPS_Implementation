@@ -186,7 +186,7 @@ def infer_cam_mp(process_id, image_ids, label_list, cur_gpu, args):
             tensor = np.zeros((args.num_classes + 1, h, w), np.float32)
             for key in cam_dict.keys():
                 tensor[key + 1] = cam_dict[key]
-            tensor[0, :, :] = args.thr # give threshold
+            tensor[0, :, :] = args.cam_thres # give threshold
             pred = np.argmax(tensor, axis=0).astype(np.uint8) # CAM prediction. dim HW, value is 0,1,2,3,4,5, ...
 
             ## save cam

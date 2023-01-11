@@ -105,18 +105,18 @@ def validate(model, data_loader):
 def run(args):
     # train & validation & saliency data loading
     train_dataset = dataloader.VOC12ClassificationDataset(args.train_list, voc12_root=args.voc12_root, sal_root=args.sal_root,
-                                                                resize_long=(320, 640), hor_flip=True,
-                                                                crop_size=512, crop_method="random")
-    train_data_loader = DataLoader(train_dataset, batch_size=args.cam_batch_size,
+                                                                resize_long=args.resize_size, hor_flip=True,
+                                                                crop_size=args.crop_size, crop_method="random")
+    train_data_loader = DataLoader(train_dataset, batch_size=args.batch_size,
                                    shuffle=True, num_workers=args.num_workers, pin_memory=True, drop_last=True)
 
     val_dataset = dataloader.VOC12ClassificationDataset(args.train_list, voc12_root=args.voc12_root, sal_root=args.sal_root,
-                                                              crop_size=512)
-    val_data_loader = DataLoader(val_dataset, batch_size=args.cam_batch_size,
+                                                              crop_size=args.crop_size)
+    val_data_loader = DataLoader(val_dataset, batch_size=args.batch_size,
                                  shuffle=False, num_workers=args.num_workers, pin_memory=True, drop_last=True)
     
     # getting max_iteration
-    # max_step = (len(train_dataset) // args.cam_batch_size) * args.
+    # max_step = (len(train_dataset) // args.batch_size) * args.
     
     # model setting & train mode
     model = EPS(args.num_classes, args.pretrained_path) 
@@ -194,7 +194,7 @@ def run(args):
 
             print('step:%5d/%5d' % (optimizer.global_step - 1, args.max_iters),
                     'loss:%.4f' % (avg_meter.pop('loss')),
-                    'imps:%.1f' % ((it + 1) * args.cam_batch_size / timer.get_stage_elapsed()),
+                    'imps:%.1f' % ((it + 1) * args.batch_size / timer.get_stage_elapsed()),
                     'etc:%s' % (timer.str_estimated_complete()), flush=True)
             print('loss_cls:%.4f' % (avg_meter.pop('loss_cls'))) ## debug
             print('loss_sal:%.4f' % (avg_meter.pop('loss_sal'))) ## debug
