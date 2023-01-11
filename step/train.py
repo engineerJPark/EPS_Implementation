@@ -190,9 +190,9 @@ def run(args):
         optimizer.step()
 
         if (optimizer.global_step-1)%10 == 0:
-            timer.update_progress(optimizer.global_step / max_step)
+            timer.update_progress(optimizer.global_step / args.max_iters)
 
-            print('step:%5d/%5d' % (optimizer.global_step - 1, max_step),
+            print('step:%5d/%5d' % (optimizer.global_step - 1, args.max_iters),
                     'loss:%.4f' % (avg_meter.pop('loss')),
                     'imps:%.1f' % ((it + 1) * args.cam_batch_size / timer.get_stage_elapsed()),
                     'etc:%s' % (timer.str_estimated_complete()), flush=True)
