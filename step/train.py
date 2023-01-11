@@ -116,7 +116,7 @@ def run(args):
                                  shuffle=False, num_workers=args.num_workers, pin_memory=True, drop_last=True)
     
     # getting max_iteration
-    max_step = (len(train_dataset) // args.cam_batch_size) * args.cam_num_epoches
+    # max_step = (len(train_dataset) // args.cam_batch_size) * args.
     
     # model setting & train mode
     model = EPS(args.num_classes, args.pretrained_path) 
@@ -142,60 +142,62 @@ def run(args):
         {'params': param_groups[1], 'lr': 2*args.lr, 'weight_decay': 0},
         {'params': param_groups[2], 'lr': 10*args.lr, 'weight_decay': args.wt_dec},
         {'params': param_groups[3], 'lr': 20*args.lr, 'weight_decay': 0}
-    ], lr=args.lr, weight_decay=args.wt_dec, max_step=max_step)
+    ], lr=args.lr, weight_decay=args.wt_dec, max_step=args.max_iters)
 
     # metric, timer
     avg_meter = pyutils.AverageMeter()
     timer = pyutils.Timer()
 
-    for ep in range(args.cam_num_epoches):
-        print('Epoch %d/%d' % (ep+1, args.cam_num_epoches))
+    # for ep in range(args.cam_num_epoches):
+    for it in rang(args.max_iters):
+        # print('Epoch %d/%d' % (ep+1, args.cam_num_epoches))
 
-        for step, pack in enumerate(train_data_loader):
-            # img, label & cuda
-            img = pack['img'].cuda(non_blocking=True) # BCHW
-            sal_img = pack['sal_img'].cuda(non_blocking=True) # BHW
-            label = pack['label'].cuda(non_blocking=True)
-     
-            # prediction
-            out, out_cam = model(img)
-            out_cam = F.softmax(out_cam, dim=1)
-            b, _, h, w = out_cam.shape # get original size
-            sal_img = F.interpolate(sal_img.unsqueeze(dim=1), size=(h, w))
-            
-            # classification loss
-            loss_cls = F.multilabel_soft_margin_loss(out[:, :-1], label) # for predicted label and GT lable
-            
-            ## this part is part of the bug    
-            fg, bg = cam2fg_n_bg(out_cam, sal_img, label) # label should be one hot decoded
-            pred_sal = psuedo_saliency(fg, bg)
-            
-            loss_sal = F.mse_loss(pred_sal, sal_img.squeeze(dim=1).float())
+        # for step, pack in enumerate(train_data_loader):
+        # img, label & cuda
+        pack = next(iter(train_data_loader))
+        img = pack['img'].cuda(non_blocking=True) # BCHW
+        sal_img = pack['sal_img'].cuda(non_blocking=True) # BHW
+        label = pack['label'].cuda(non_blocking=True)
+    
+        # prediction
+        out, out_cam = model(img)
+        out_cam = F.softmax(out_cam, dim=1)
+        b, _, h, w = out_cam.shape # get original size
+        sal_img = F.interpolate(sal_img.unsqueeze(dim=1), size=(h, w))
+        
+        # classification loss
+        loss_cls = F.multilabel_soft_margin_loss(out[:, :-1], label) # for predicted label and GT lable
+        
+        ## this part is part of the bug    
+        fg, bg = cam2fg_n_bg(out_cam, sal_img, label) # label should be one hot decoded
+        pred_sal = psuedo_saliency(fg, bg)
+        
+        loss_sal = F.mse_loss(pred_sal, sal_img.squeeze(dim=1).float())
 
-            # total loss
-            loss_total = loss_cls + loss_sal
-            
-            # print(type(loss_total))
-            
-            # loss addition
-            avg_meter.add({'loss': loss_total.item()})
-            avg_meter.add({'loss_cls': loss_cls.item()}) ## debug
-            avg_meter.add({'loss_sal': loss_sal.item()}) ## debug
+        # total loss
+        loss_total = loss_cls + loss_sal
+        
+        # print(type(loss_total))
+        
+        # loss addition
+        avg_meter.add({'loss': loss_total.item()})
+        avg_meter.add({'loss_cls': loss_cls.item()}) ## debug
+        avg_meter.add({'loss_sal': loss_sal.item()}) ## debug
 
-            # backpropagation
-            optimizer.zero_grad()
-            loss_total.backward()
-            optimizer.step()
+        # backpropagation
+        optimizer.zero_grad()
+        loss_total.backward()
+        optimizer.step()
 
-            if (optimizer.global_step-1)%10 == 0:
-                timer.update_progress(optimizer.global_step / max_step)
+        if (optimizer.global_step-1)%10 == 0:
+            timer.update_progress(optimizer.global_step / max_step)
 
-                print('step:%5d/%5d' % (optimizer.global_step - 1, max_step),
-                      'loss:%.4f' % (avg_meter.pop('loss')),
-                      'imps:%.1f' % ((step + 1) * args.cam_batch_size / timer.get_stage_elapsed()),
-                      'etc:%s' % (timer.str_estimated_complete()), flush=True)
-                print('loss_cls:%.4f' % (avg_meter.pop('loss_cls'))) ## debug
-                print('loss_sal:%.4f' % (avg_meter.pop('loss_sal'))) ## debug
+            print('step:%5d/%5d' % (optimizer.global_step - 1, max_step),
+                    'loss:%.4f' % (avg_meter.pop('loss')),
+                    'imps:%.1f' % ((it + 1) * args.cam_batch_size / timer.get_stage_elapsed()),
+                    'etc:%s' % (timer.str_estimated_complete()), flush=True)
+            print('loss_cls:%.4f' % (avg_meter.pop('loss_cls'))) ## debug
+            print('loss_sal:%.4f' % (avg_meter.pop('loss_sal'))) ## debug
         timer.reset_stage()
         
     else: # if one epoch is trained with no error
