@@ -194,6 +194,7 @@ def run(args):
 
             print('step:%5d/%5d' % (optimizer.global_step - 1, args.max_iters),
                     'loss:%.4f' % (avg_meter.pop('loss')),
+                    # 'imps:%.1f' % ((it + 1) * args.batch_size / timer.get_stage_elapsed()),
                     'imps:%.1f' % ((it + 1) * args.batch_size / timer.get_stage_elapsed()),
                     'etc:%s' % (timer.str_estimated_complete()), flush=True)
             print('loss_cls:%.4f' % (avg_meter.pop('loss_cls'))) ## debug
