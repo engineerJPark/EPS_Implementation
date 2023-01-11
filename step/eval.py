@@ -82,8 +82,8 @@ def run(args):
     st = time.time()
     for idx, img_id in tqdm(enumerate(img_ids)):
         gt_path = os.path.join(args.gt_dir, img_id + postfix)
-        pred_path = os.path.join(args.pred_dir, img_id + postfix)
-        # pred_path = os.path.join(args.pred_dir, img_id + '.npy')
+        pred_path = os.path.join(args.cam_out_dir, img_id + postfix)
+        # pred_path = os.path.join(args.cam_out_dir, img_id + '.npy')
 
         gt = Image.open(gt_path) # HW
         w, h = gt.size[0], gt.size[1]
@@ -100,7 +100,7 @@ def run(args):
     mean_recall = np.nanmean(recall)
 
     print(acc)
-    with open(args.save_path, 'w') as f:
+    with open(args.eval_save_path, 'w') as f:
         f.write("{:>5} {:>20} {:>10} {:>10} {:>10}\n".format('IDX', 'Name', 'IoU', 'Prec', 'Recall'))
         f.write("{:>5} {:>20} {:>10.2f} {:>10.2f} {:>10.2f}\n".format(
             '-', 'mean', miou * 100, mean_prec * 100, mean_recall * 100))

@@ -43,13 +43,16 @@ if __name__ == '__main__':
     parser.add_argument("--n_total_processes", default=1, type=int)
 
     # Dataset
+    parser.add_argument('--dataset', default='voc12')
     parser.add_argument("--train_list", default="voc12/train.txt", type=str)
     parser.add_argument("--val_list", default="voc12/train.txt", type=str)
     parser.add_argument("--infer_list", default="voc12/train.txt", type=str,
                         help="voc12/train_aug.txt to train a fully supervised model, "
                              "voc12/train.txt or voc12/val.txt to quickly check the quality of the labels.")
+    parser.add_argument('--gt_dir', default='dataset/VOCdevkit/VOC2012/SegmentationClass', type=str)
     parser.add_argument("--num_classes", default=20, type=int)
     parser.add_argument("--pretrained_path", default="savefile/pretrained/resnet38.pth", type=str)
+    
     
     # optimizer
     parser.add_argument("--lr", default=0.01, type=float) # 0.01
@@ -72,15 +75,9 @@ if __name__ == '__main__':
     parser.add_argument("--crf_alpha", nargs='*', type=int)
     parser.add_argument("--crf_t", nargs='*', type=int)
     
-    # Evaluation, need to be fixed
-    parser.add_argument('--dataset', default='voc12')
-    parser.add_argument('--datalist', default='voc12/train.txt', type=str)
-    parser.add_argument('--gt_dir', default='dataset/VOCdevkit/VOC2012/SegmentationClass', type=str)
-    parser.add_argument('--pred_dir', default='savefile/result/cam', type=str)
-    parser.add_argument('--save_path', default='eval_log.txt', type=str)
-    
     # Output Path
     parser.add_argument("--log_name", default="sample_train_eval", type=str)
+    parser.add_argument('--eval_save_path', default='eval_log.txt', type=str)
     parser.add_argument("--cam_weights_name", default="savefile/pretrained/resnet38_eps.pth", type=str)
     parser.add_argument("--cam_out_dir", default="savefile/result/cam", type=str) # npy path
     
@@ -90,7 +87,6 @@ if __name__ == '__main__':
     parser.add_argument("--make_cam_pass", default=True)
     parser.add_argument("--eval_pass", default=True)
     parser.add_argument("--draw_pass", default=True)
-
 
     args = parser.parse_args()
     
@@ -104,7 +100,7 @@ if __name__ == '__main__':
     # os.makedirs(args.sem_seg_out_dir, exist_ok=True)
     # os.makedirs(args.ins_seg_out_dir, exist_ok=True)
 
-    pyutils.Logger(args.log_name + '.log')
+    pyutils.Logger(args.log_save_path + '.log')
     print(vars(args))
     
     if args.train_pass is True:
