@@ -80,7 +80,7 @@ if __name__ == '__main__':
     parser.add_argument("--crf_t", nargs='*', type=int)
     
     # Output Path
-    parser.add_argument("--log_name", default="sample_train_eval", type=str)
+    parser.add_argument("--log_name", default="train_eval", type=str)
     parser.add_argument('--eval_save_path', default='eval_log.txt', type=str)
     parser.add_argument("--cam_weights_name", default="savefile/pretrained/resnet38_eps.pth", type=str)
     parser.add_argument("--cam_out_dir", default="savefile/result/cam_npy", type=str) # npy path
@@ -98,7 +98,7 @@ if __name__ == '__main__':
     os.makedirs("savefile/result/cam_on_img", exist_ok=True)
     os.makedirs(args.cam_out_dir, exist_ok=True)
 
-    pyutils.Logger(args.log_save_path + '.log')
+    pyutils.Logger(args.log_name + '.log')
     print(vars(args))
     
     if args.train_pass is True:
