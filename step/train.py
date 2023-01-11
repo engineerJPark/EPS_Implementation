@@ -165,6 +165,10 @@ def run(args):
         b, _, h, w = out_cam.shape # get original size
         sal_img = F.interpolate(sal_img.unsqueeze(dim=1), size=(h, w))
         
+        print("===debug===")
+        print(out_cam.mean(), sal_img.mean())
+        print(out_cam.unique(), sal_img.unique())
+        
         # classification loss
         loss_cls = F.multilabel_soft_margin_loss(out[:, :-1], label) # for predicted label and GT lable
         
@@ -181,8 +185,8 @@ def run(args):
         
         # loss addition
         avg_meter.add({'loss': loss_total.item()})
-        avg_meter.add({'loss_cls': loss_cls.item()}) ## debug
-        avg_meter.add({'loss_sal': loss_sal.item()}) ## debug
+        avg_meter.add({'loss_cls': loss_cls.item()})
+        avg_meter.add({'loss_sal': loss_sal.item()})
 
         # backpropagation
         optimizer.zero_grad()
@@ -197,8 +201,8 @@ def run(args):
                     # 'imps:%.1f' % ((it + 1) * args.batch_size / timer.get_stage_elapsed()),
                     'imps:%.1f' % ((it + 1) * args.batch_size / timer.get_stage_elapsed()),
                     'etc:%s' % (timer.str_estimated_complete()), flush=True)
-            print('loss_cls:%.4f' % (avg_meter.pop('loss_cls'))) ## debug
-            print('loss_sal:%.4f' % (avg_meter.pop('loss_sal'))) ## debug
+            print('loss_cls:%.4f' % (avg_meter.pop('loss_cls')))
+            print('loss_sal:%.4f' % (avg_meter.pop('loss_sal')))
         timer.reset_stage()
         
     else: # if one epoch is trained with no error
