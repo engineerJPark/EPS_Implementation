@@ -29,8 +29,6 @@ def _work(process_id, dataset, args):
     databin = dataset[process_id]
     n_gpus = torch.cuda.device_count()
     data_loader = DataLoader(databin, shuffle=False, num_workers=args.num_workers // n_gpus, pin_memory=False)
-    
-    os.makedirs(args.cam_out_dir + "_on_img", exist_ok=True)
 
     with torch.no_grad(), cuda.device(process_id):
         for iter, pack in enumerate(data_loader):
@@ -40,7 +38,7 @@ def _work(process_id, dataset, args):
             valid_cat = torch.nonzero(label)[:, 0] # nonzero label index for all batch. codepage class number
             
             img = PIL.Image.open(os.path.join(args.voc12_root, 'JPEGImages', name_str + '.jpg'))
-            cam_img = np.load(os.path.join(args.cam_out_dir + '_on_img', name_str + '.png'), allow_pickle=True).item()
+            cam_img = np.load(os.path.join("savefile/result/cam_on_img", name_str + '.png'), allow_pickle=True).item()
             
             cam_img_pil = []
             for channel_idx in cam_img.keys(): # range(cam_img.shape[0]): # cam img for each class + coloring
@@ -48,7 +46,7 @@ def _work(process_id, dataset, args):
             for channel_idx in range(cam_img.shape[0]): # superpose on image
                 plt.imshow(img, alpha = 0.4)
                 plt.imshow(cam_img_pil[channel_idx], alpha = 0.4)
-                plt.savefig(args.cam_out_dir + "_on_img" + '/cam_%s_%s.png' % (name_str, CAT_LIST[valid_cat[channel_idx]]))
+                plt.savefig("savefile/result/cam_on_img" + '/cam_%s_%s.png' % (name_str, CAT_LIST[valid_cat[channel_idx]]))
                 plt.clf()
 
             if process_id == n_gpus - 1 and iter % (len(databin) // 20) == 0:
@@ -61,8 +59,7 @@ def run(args):
     dataset = voc12.dataloader.VOC12ClassificationDataset(
         args.train_list, 
         voc12_root=args.voc12_root, 
-        sal_root=args.sal_root,
-        scales=args.cam_scales
+        sal_root=args.sal_root
         )
     dataset = torchutils.split_dataset(dataset, n_gpus)
 

@@ -95,8 +95,9 @@ if __name__ == '__main__':
     
     os.makedirs("savefile/pretrained", exist_ok=True)
     os.makedirs("savefile/result", exist_ok=True)
-    os.makedirs("savefile/result/cam_on_img", exist_ok=True)
     os.makedirs(args.cam_out_dir, exist_ok=True)
+    os.makedirs("savefile/result/cam_png", exist_ok=True)
+    os.makedirs("savefile/result/cam_on_img", exist_ok=True)
 
     pyutils.Logger(args.log_name + '.log')
     print(vars(args))
