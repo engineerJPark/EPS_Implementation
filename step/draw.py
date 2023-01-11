@@ -38,15 +38,15 @@ def _work(process_id, dataset, args):
             valid_cat = torch.nonzero(label)[:, 0] # nonzero label index for all batch. codepage class number
             
             img = PIL.Image.open(os.path.join(args.voc12_root, 'JPEGImages', name_str + '.jpg'))
-            cam_img = np.load(os.path.join("savefile/result/cam_on_img", name_str + '.png'), allow_pickle=True).item()
+            cam_img = np.load(os.path.join(args.cam_npy, name_str + '.npy'), allow_pickle=True).item()
             
             cam_img_pil = []
             for channel_idx in cam_img.keys(): # range(cam_img.shape[0]): # cam img for each class + coloring
                 cam_img_pil.append(PIL.Image.fromarray(np.uint8(cm.jet(cam_img[channel_idx]) * 255)))
-            for channel_idx in range(cam_img.shape[0]): # superpose on image
-                plt.imshow(img, alpha = 0.4)
-                plt.imshow(cam_img_pil[channel_idx], alpha = 0.4)
-                plt.savefig("savefile/result/cam_on_img" + '/cam_%s_%s.png' % (name_str, CAT_LIST[valid_cat[channel_idx]]))
+            for i in range(len(cam_img_pil)): # superpose on image
+                plt.imshow(img, alpha = 0.5)
+                plt.imshow(cam_img_pil[i], alpha = 0.4)
+                plt.savefig("savefile/result/cam_on_img" + '/cam_%s_%s.png' % (name_str, CAT_LIST[valid_cat[i]]))
                 plt.clf()
 
             if process_id == n_gpus - 1 and iter % (len(databin) // 20) == 0:
