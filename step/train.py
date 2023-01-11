@@ -149,7 +149,7 @@ def run(args):
     timer = pyutils.Timer()
 
     # for ep in range(args.cam_num_epoches):
-    for it in rang(args.max_iters):
+    for it in range(args.max_iters):
         # print('Epoch %d/%d' % (ep+1, args.cam_num_epoches))
 
         # for step, pack in enumerate(train_data_loader):
