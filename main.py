@@ -64,8 +64,8 @@ if __name__ == '__main__':
     parser.add_argument("--cam_learning_rate", default=0.1, type=float)
     parser.add_argument("--cam_weight_decay", default=1e-4, type=float)
     parser.add_argument("--cam_eval_thres", default=0.15, type=float)
-    # parser.add_argument("--cam_scales", default=(1.0, 0.5, 1.5, 2.0),
-    #                     help="Multi-scale inferences")
+    parser.add_argument("--cam_scales", default=(1.0, 0.5, 1.5, 2.0),
+                        help="Multi-scale inferences")
 
     parser.add_argument("--network", default="net.resnet38_base", type=str)
     # parser.add_argument("--weights", required=True, type=str)

@@ -14,7 +14,7 @@ from torch.multiprocessing import Process
 from utils import imutils, pyutils
 from utils.imutils import HWC_to_CHW
 from net.resnet38_base import Normalize
-from voc12.dataloader import load_img_id_list, load_image_label_list_from_npy
+from voc12.dataloader import load_img_id_list, load_image_label_list_from_npy, decode_int_filename
 
 
 start = time.time()
@@ -23,7 +23,7 @@ start = time.time()
 def parse_args(args):
     if args.dataset == 'voc12':
         args.num_classes = 20
-        args.img_root = args.voc12_root
+        args.img_root = args.voc12_root + '/JPEGImages'
     # elif args.dataset == 'coco':
     #     args.num_classes = 80
     #     args.img_root = args.coco_root
@@ -40,12 +40,12 @@ def parse_args(args):
     # else:
     #     raise Exception('No appropriate model type')
 
-    args.model_num_classes = args.num_classes + 1
+    # args.model_num_classes = args.num_classes + 1
     
     ## model information
     
     args.num_classes = 20
-    args.model_num_classes = args.num_classes + 1
+    # args.model_num_classes = args.num_classes + 1
 
     # save path
     args.save_type = list()
@@ -96,11 +96,11 @@ def preprocess(image, scale_list, transform):
     return multi_scale_flipped_image_list
 
 
-def predict_cam(model, image, label, gpu, network_type, args):
+def predict_cam(model, image, label, gpu, args):
 
     original_image_size = np.asarray(image).shape[:2]
     # preprocess image
-    multi_scale_flipped_image_list = preprocess(image, args.scales, args.transform)
+    multi_scale_flipped_image_list = preprocess(image, args.cam_scales, args.transform)
 
     cam_list = list()
     model.eval()
@@ -141,23 +141,26 @@ def infer_cam_mp(process_id, image_ids, label_list, cur_gpu, args):
     print('process {} starts...'.format(os.getpid()))
 
     print(process_id, cur_gpu)
-    print('GPU:', cur_gpu)
+    print('GPU Number:', cur_gpu)
     print('{} images per process'.format(len(image_ids)))
 
-    model = getattr(importlib.import_module(args.network), 'EPS')(args.model_num_classes)
-    model = model.cuda(cur_gpu)
+    # model = getattr(importlib.import_module(args.network), 'EPS')(args.model_num_classes)
+    method = getattr(importlib.import_module(args.network), 'EPS')
+    model = method(args.num_classes).cuda(cur_gpu)
     model.load_state_dict(torch.load(args.cam_weights_name))
     model.eval()
     
     with torch.no_grad():
         for i, (img_id, label) in enumerate(zip(image_ids, label_list)):
             # load image
+            # print(img_id) ## debug
+            img_id = decode_int_filename(img_id)
             img_path = os.path.join(args.img_root, img_id + '.jpg')
             img = Image.open(img_path).convert('RGB')
             org_img = np.asarray(img)
 
             # infer cam_list
-            cam_list = predict_cam(model, img, label, cur_gpu, args.network_type)
+            cam_list = predict_cam(model, img, label, cur_gpu, args)
 
             # if args.network_type == 'cls':
             #     sum_cam = np.sum(cam_list, axis=0)
@@ -257,6 +260,7 @@ def main_mp(args):
             sub_label_list.append(label_list[split_size * i:split_size * (i + 1)])
 
     # multi-process
+    torch.multiprocessing.set_start_method('spawn')
     gpu_list = list()
     for idx, num in enumerate(args.n_processes_per_gpu):
         gpu_list.extend([idx for i in range(num)]) # 0,0,0,0,1,1,1,1,2,2,2,2,3,3,3, ... 
@@ -273,14 +277,13 @@ def main_mp(args):
 
 def run(args):
     crf_alpha = (4, 32) # for low background constraint, alpha 4, strong background constraint, alpha 32
-    # args = parse_args(args)
+    args = parse_args(args)
 
     # n_gpus = args.n_gpus
     # scales = (0.5, 1.0, 1.5, 2.0)
     # normalize = Normalize()
     # transform = torchvision.transforms.Compose([np.asarray, normalize, HWC_to_CHW])
     
-    args.scales = (0.5, 1.0, 1.5, 2.0)
     args.transform = torchvision.transforms.Compose([np.asarray, Normalize(), HWC_to_CHW])
     
     main_mp(args)

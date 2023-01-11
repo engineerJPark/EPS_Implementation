@@ -19,8 +19,8 @@ def cam2fg_n_bg(cam, sal_img, label, num_classes=20, sal_thres=0.5, tau=0.4):
     pred_sal = F.softmax(cam, dim=1) ## getting saliency map & label map setting
     b,_,h,w = cam.shape
     
-    fg = torch.zeros((b, num_classes + 1, h, w)).bool().cuda()
-    bg = torch.zeros((b, num_classes + 1, h, w)).bool().cuda()
+    fg = torch.zeros((b, num_classes + 1, h, w)).float().cuda()
+    bg = torch.zeros((b, num_classes + 1, h, w)).float().cuda()
     
     ## set overlapping ratio  for each channel & get right label index for indicating the CAM
     ## sum up for each channel -> get ratio for each channel
@@ -28,8 +28,8 @@ def cam2fg_n_bg(cam, sal_img, label, num_classes=20, sal_thres=0.5, tau=0.4):
         ((pred_sal[:, :-1] > sal_thres) + 1e-5).reshape(b, num_classes, -1).sum(-1) 
     fg_channel = (overlap_ratio > tau).reshape(b, num_classes, 1, 1).expand(b, num_classes, h, w)
     
-    fg[:,:-1] = pred_sal[:, :-1] * fg_channel # valid channel for fg
-    bg[:,:-1] = pred_sal[:, :-1] * (~fg_channel) # valid channel for bg
+    fg[:,:-1] = pred_sal[:, :-1] * fg_channel.to(torch.float) # valid channel for fg
+    bg[:,:-1] = pred_sal[:, :-1] * (~fg_channel).to(torch.float) # valid channel for bg
     bg[:,-1] = pred_sal[:, -1] # for summing all element of M_c+1, True
     
     ## get right prediction of saliency
@@ -79,6 +79,7 @@ def validate(model, data_loader):
             ## this part is part of the bug    
             fg, bg = cam2fg_n_bg(out_cam, sal_img, label) # label should be one hot decoded
             pred_sal = psuedo_saliency(fg, bg)
+
             loss_sal = F.mse_loss(pred_sal, sal_img.squeeze(dim=1))
 
             # total loss
@@ -168,7 +169,8 @@ def run(args):
             ## this part is part of the bug    
             fg, bg = cam2fg_n_bg(out_cam, sal_img, label) # label should be one hot decoded
             pred_sal = psuedo_saliency(fg, bg)
-            loss_sal = F.mse_loss(pred_sal, sal_img.squeeze(dim=1))
+            
+            loss_sal = F.mse_loss(pred_sal, sal_img.squeeze(dim=1).float())
 
             # total loss
             loss_total = loss_cls + loss_sal
