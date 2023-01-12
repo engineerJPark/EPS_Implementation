@@ -165,6 +165,7 @@ dataset
 savefile
 test.py
 resnet38.zip
+savefile.zip
 SALImages.tar.gz
 SegmentationClassAug.zip
 VOCtrainval_11-May-2012.tar

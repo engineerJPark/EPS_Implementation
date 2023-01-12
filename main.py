@@ -54,7 +54,7 @@ if __name__ == '__main__':
     parser.add_argument("--pretrained_path", default="savefile/pretrained/resnet38.pth", type=str)
     
     ## Augmentation
-    parser.add_argument("--batch_size", default=8, type=int)
+    parser.add_argument("--batch_size", default=4, type=int)
     parser.add_argument("--crop_size", default=448, type=int)
     parser.add_argument("--resize_size", default=(256, 512), type=int, nargs='*')
     
@@ -95,7 +95,7 @@ if __name__ == '__main__':
     
     os.makedirs("savefile/pretrained", exist_ok=True)
     os.makedirs("savefile/result", exist_ok=True)
-    os.makedirs(args.cam_out_dir, exist_ok=True)
+    os.makedirs("savefile/result/cam_npy", exist_ok=True)
     os.makedirs("savefile/result/cam_png", exist_ok=True)
     os.makedirs("savefile/result/cam_on_img", exist_ok=True)
 
