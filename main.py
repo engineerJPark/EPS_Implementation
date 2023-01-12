@@ -5,13 +5,14 @@ from utils import pyutils
 ## random seed fixing
 ## PyTorch
 import torch
-torch.manual_seed(0)
-torch.cuda.manual_seed(0)
-torch.cuda.manual_seed_all(0) # gpu 1개 이상일 때 
+seed = 1
+torch.manual_seed(seed)
+torch.cuda.manual_seed(seed)
+torch.cuda.manual_seed_all(seed) # gpu 1개 이상일 때 
 
 ## Numpy
 import numpy as np
-np.random.seed(0)
+np.random.seed(seed)
 
 ## CuDNN
 import torch.backends.cudnn as cudnn
@@ -20,7 +21,7 @@ cudnn.benchmark = False
 
 ## Python
 import random
-random.seed(0)
+random.seed(seed)
 
 if __name__ == '__main__':
     if torch.cuda.is_available(): 
@@ -32,7 +33,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     # Environment
-    parser.add_argument("--num_workers", default=os.cpu_count()//2, type=int)
+    # parser.add_argument("--num_workers", default=os.cpu_count()//2, type=int)
+    parser.add_argument("--num_workers", default=0, type=int)
     parser.add_argument("--voc12_root", default='dataset/VOCdevkit/VOC2012', type=str,
                         help="Path to VOC 2012 Devkit, must contain ./JPEGImages as subdirectory.")
     parser.add_argument("--sal_root", default='dataset/SALImages', type=str,
@@ -61,7 +63,7 @@ if __name__ == '__main__':
     # optimizer
     parser.add_argument("--lr", default=0.01, type=float) # 0.01
     parser.add_argument("--wt_dec", default=5e-4, type=float) # 5e-4
-    parser.add_argument("--max_iters", default=10000, type=int)
+    parser.add_argument("--max_iters", default=20000, type=int)
 
     # hyper-parameters for EPS
     parser.add_argument("--tau", default=0.5, type=float)

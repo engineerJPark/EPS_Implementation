@@ -114,7 +114,7 @@ class VOC12ImageDataset(Dataset):
         name_str = decode_int_filename(name)
         img = np.asarray(imageio.imread(get_img_path(name_str, self.voc12_root)))
         sal_img = np.asarray(imageio.imread(get_img_path(name_str, self.sal_root)), dtype=np.float32)[..., 0] # imageio duplicate grayscale image to 3 dimension
-
+            
         # sal_img should be preprocessed at the same method
         if self.resize_long:
             img, sal_img = imutils.random_resize_long((img, sal_img), self.resize_long[0], self.resize_long[1])
