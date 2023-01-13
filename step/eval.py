@@ -103,6 +103,7 @@ def run(args):
 
     print(acc)
     with open(args.eval_save_path, 'w') as f:
+        
         f.write("{:>5} {:>20} {:>10} {:>10} {:>10}\n".format('IDX', 'Name', 'IoU', 'Prec', 'Recall'))
         f.write("{:>5} {:>20} {:>10.2f} {:>10.2f} {:>10.2f}\n".format(
             '-', 'mean', miou * 100, mean_prec * 100, mean_recall * 100))
