@@ -222,6 +222,7 @@ def npy2img(img_name, npy_path='./cam_result'):
     return labels, cam
 
 
+
 '''
 ### how to use img2npy & npy2img
 for step, pack enumerate(data_loader):

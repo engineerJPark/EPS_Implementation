@@ -165,25 +165,12 @@ def run(args):
         b, _, h, w = out_cam.shape 
         sal_img = F.interpolate(sal_img.unsqueeze(dim=1), size=(h, w), mode='bilinear') # downsize images
         
-        # print("=====debug=====")
-        # print(out_cam.min(), sal_img.min())
-        # print(out_cam.max(), sal_img.max())
-        # print(out_cam.unique(), sal_img.unique())
-        # print("=====debug=====")
-        
         # classification loss
         loss_cls = F.multilabel_soft_margin_loss(out[:, :-1], label) # for predicted label and GT lable
         
         # getting predicted saliency
         fg, bg = cam2fg_n_bg(out_cam, sal_img, label) # label should be one hot decoded
         pred_sal = psuedo_saliency(fg, bg)
-        
-        # print("=====debug=====")
-        # print(pred_sal.min(), sal_img.min())
-        # print(pred_sal.max(), sal_img.max())
-        # print(pred_sal.unique(), sal_img.unique())
-        # print("=====debug=====")
-        # exit()
         
         # saliency loss 
         loss_sal = F.mse_loss(pred_sal, sal_img.squeeze(dim=1))

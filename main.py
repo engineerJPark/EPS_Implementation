@@ -5,7 +5,7 @@ from utils import pyutils
 ## random seed fixing
 ## PyTorch
 import torch
-seed = 1
+seed = 42
 torch.manual_seed(seed)
 torch.cuda.manual_seed(seed)
 torch.cuda.manual_seed_all(seed) # gpu 1개 이상일 때 
@@ -70,7 +70,7 @@ if __name__ == '__main__':
     parser.add_argument("--lam", default=0.5, type=float)
 
     # Class Activation Map parameter
-    parser.add_argument("--cam_scales", default=(1.0, 0.5, 1.5, 2.0),
+    parser.add_argument("--cam_scales", default=(0.5, 1.0, 1.5, 2.0),
                         help="Multi-scale inferences")
     parser.add_argument("--cam_npy", default="savefile/result/cam_npy", type=str) # "savefile/result/cam" , separate two of them by .npy & .png
     parser.add_argument("--cam_png", default="savefile/result/cam_png", type=str) # "savefile/result/cam" , 

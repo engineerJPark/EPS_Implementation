@@ -30,22 +30,8 @@ def parse_args(args):
     else:
         raise Exception('Error')
     
-    # # model information
-    # if 'cls' in args.network:
-    #     args.network_type = 'cls'
-    #     args.model_num_classes = args.num_classes
-    # elif 'eps' in args.network:
-    #     args.network_type = 'eps'
-    #     args.model_num_classes = args.num_classes + 1
-    # else:
-    #     raise Exception('No appropriate model type')
-
-    # args.model_num_classes = args.num_classes + 1
-    
     ## model information
-    
     args.num_classes = 20
-    # args.model_num_classes = args.num_classes + 1
 
     # save path
     args.save_type = list()
@@ -161,15 +147,6 @@ def infer_cam_mp(process_id, image_ids, label_list, cur_gpu, args):
 
             # infer cam_list
             cam_list = predict_cam(model, img, label, cur_gpu, args)
-
-            # if args.network_type == 'cls':
-            #     sum_cam = np.sum(cam_list, axis=0)
-            # elif args.network_type == 'eps':
-            #     cam_np = np.array(cam_list)
-            #     cam_fg = cam_np[:, 0]
-            #     sum_cam = np.sum(cam_fg, axis=0)
-            # else:
-            #     raise Exception('No appropriate model type')
             
             ''' strange '''
             cam_np = np.array(cam_list)
@@ -277,13 +254,8 @@ def main_mp(args):
         
 
 def run(args):
-    crf_alpha = (4, 32) # for low background constraint, alpha 4, strong background constraint, alpha 32
+    args.crf_alpha = (4, 32) # for low background constraint, alpha 4, strong background constraint, alpha 32
     args = parse_args(args)
-
-    # n_gpus = args.n_gpus
-    # scales = (0.5, 1.0, 1.5, 2.0)
-    # normalize = Normalize()
-    # transform = torchvision.transforms.Compose([np.asarray, normalize, HWC_to_CHW])
     
     args.transform = torchvision.transforms.Compose([np.asarray, Normalize(), HWC_to_CHW])
     
