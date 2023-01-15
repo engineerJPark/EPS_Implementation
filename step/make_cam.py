@@ -169,10 +169,10 @@ def infer_cam_mp(process_id, image_ids, label_list, cur_gpu, args):
 
             ## save cam
             if args.cam_npy is not None:
-                np.save(os.path.join(args.cam_npy, img_id + '.npy'), cam_dict) # dim CHW
+                np.save(os.path.join(args.cam_npy, img_id + '.npy'), cam_dict) # dim CHW, probability
 
             if args.cam_png is not None:
-                imageio.imwrite(os.path.join(args.cam_png, img_id + '.png'), pred) # dim CHW
+                imageio.imwrite(os.path.join(args.cam_png, img_id + '.png'), pred) # dim CHW, direct class number for evaluation
 
             if args.crf is not None: # save CRF CAM in npy
                 for folder, t, alpha in args.crf_list:

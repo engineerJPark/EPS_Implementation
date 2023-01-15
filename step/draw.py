@@ -39,6 +39,7 @@ def _work(process_id, dataset, args):
             
             img = PIL.Image.open(os.path.join(args.voc12_root, 'JPEGImages', name_str + '.jpg'))
             cam_img = np.load(os.path.join(args.cam_npy, name_str + '.npy'), allow_pickle=True).item()
+            # cam_img = PIL.Image.open(os.path.join(args.cam_png, name_str + '.png'))
             
             cam_img_pil = []
             for channel_idx in cam_img.keys(): # range(cam_img.shape[0]): # cam img for each class + coloring
