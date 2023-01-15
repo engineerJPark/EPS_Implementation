@@ -6,6 +6,7 @@ import os.path
 import imageio
 from utils import imutils
 from torchvision import transforms
+import PIL
 
 IMG_FOLDER_NAME = "JPEGImages"
 ANNOT_FOLDER_NAME = "Annotations"
@@ -93,7 +94,7 @@ class VOC12ImageDataset(Dataset):
 
     def __init__(self, img_name_list_path, voc12_root, sal_root,
                  resize_long=None, rescale=None, img_normal=Normalize(), hor_flip=False,
-                 crop_size=None, crop_method=None, to_torch=True):
+                 crop_size=None, crop_method=None, to_CHW=True):
 
         self.img_name_list = load_img_name_list(img_name_list_path)
         self.voc12_root = voc12_root
@@ -105,7 +106,7 @@ class VOC12ImageDataset(Dataset):
         self.img_normal = img_normal
         self.hor_flip = hor_flip
         self.crop_method = crop_method
-        self.to_torch = to_torch
+        self.to_CHW = to_CHW
         self.color = transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3, hue=0.1)
 
     def __len__(self):
@@ -123,16 +124,17 @@ class VOC12ImageDataset(Dataset):
 
         if self.rescale:
             img, sal_img = imutils.random_scale((img, sal_img), scale_range=self.rescale, order=3)
-
+            
+        if self.color:
+            img = self.color(PIL.Image.fromarray(img))
+            img = np.asarray(img)
+            
         if self.img_normal: # img alone
             img = self.img_normal(img)
             sal_img = sal_img / 255.
             
         if self.hor_flip:
             img, sal_img = imutils.random_lr_flip((img, sal_img))
-            
-        if self.color:
-            img = self.color(img)
 
         if self.crop_size:
             if self.crop_method == "random":
@@ -141,7 +143,7 @@ class VOC12ImageDataset(Dataset):
                 img = imutils.top_left_crop((img), self.crop_size, 0)
                 sal_img = imutils.top_left_crop((sal_img), self.crop_size, 0)
 
-        if self.to_torch:
+        if self.to_CHW:
             img = imutils.HWC_to_CHW(img)
 
         return {'name': name_str, 'img': img, 'sal_img': sal_img} # for time when you need img only, use dictionary
