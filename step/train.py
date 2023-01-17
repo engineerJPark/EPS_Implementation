@@ -176,25 +176,21 @@ def run(args):
         loss_total = loss_cls + loss_sal
 
         # loss addition
-        avg_meter.add({'loss': loss_total.item()})
-        avg_meter.add({'loss_cls': loss_cls.item()})
-        avg_meter.add({'loss_sal': loss_sal.item()})
+        avg_meter.add({'loss': loss_total.item(), 'loss_cls': loss_cls.item(), 'loss_sal': loss_sal.item()})
 
         # backpropagation
         optimizer.zero_grad()
         loss_total.backward()
         optimizer.step()
 
-        if (optimizer.global_step-1)%10 == 0:
+        if (optimizer.global_step-1)%500 == 0:
             timer.update_progress(optimizer.global_step / args.max_iters)
 
             print('step:%5d/%5d' % (optimizer.global_step - 1, args.max_iters),
                     'loss:%.4f' % (avg_meter.pop('loss')),
-                    # 'imps:%.1f' % ((it + 1) * args.batch_size / timer.get_stage_elapsed()),
-                    'imps:%.1f' % ((it + 1) * args.batch_size / timer.get_stage_elapsed()),
+                    'loss_cls:%.4f' % (avg_meter.pop('loss_cls')),
+                    'loss_sal:%.4f' % (avg_meter.pop('loss_sal')),
                     'etc:%s' % (timer.str_estimated_complete()), flush=True)
-            print('loss_cls:%.4f' % (avg_meter.pop('loss_cls')))
-            print('loss_sal:%.4f' % (avg_meter.pop('loss_sal')))
         timer.reset_stage()
         
     else: # if one epoch is trained with no error
