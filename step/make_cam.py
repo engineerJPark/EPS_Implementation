@@ -41,14 +41,14 @@ def parse_args(args):
     if args.cam_png is not None:
         os.makedirs(args.cam_png, exist_ok=True)
         args.save_type.append(args.cam_png)
-    if args.crf:
-        args.crf_list = list()
-        for t in args.crf_t:
-            for alpha in args.crf_alpha:
-                crf_folder = os.path.join(args.crf, 'crf_{}_{}'.format(t, alpha))
-                os.makedirs(crf_folder, exist_ok=True)
-                args.crf_list.append((crf_folder, t, alpha))
-                args.save_type.append(args.crf_folder)
+    # if args.crf:
+    #     args.crf_list = list()
+    #     for t in args.crf_t:
+    #         for alpha in args.crf_alpha:
+    #             crf_folder = os.path.join(args.crf, 'crf_{}_{}'.format(t, alpha))
+    #             os.makedirs(crf_folder, exist_ok=True)
+    #             args.crf_list.append((crf_folder, t, alpha))
+    #             args.save_type.append(args.crf_folder)
 
     # processors
     args.n_processes_per_gpu = [int(_) for _ in args.n_processes_per_gpu]
@@ -174,19 +174,19 @@ def infer_cam_mp(process_id, image_ids, label_list, cur_gpu, args):
             if args.cam_png is not None:
                 imageio.imwrite(os.path.join(args.cam_png, img_id + '.png'), pred) # dim CHW, direct class number for evaluation
 
-            if args.crf is not None: # save CRF CAM in npy
-                for folder, t, alpha in args.crf_list:
-                    cam_crf = _crf_with_alpha(org_img, cam_dict, alpha, t=t) # channel is ... [bg, fg, fg, fg, ...]
-                    np.save(os.path.join(folder, img_id + '.npy'), cam_crf) # dim CHW
+            # if args.crf is not None: # save CRF CAM in npy
+            #     for folder, t, alpha in args.crf_list:
+            #         cam_crf = _crf_with_alpha(org_img, cam_dict, alpha, t=t) # channel is ... [bg, fg, fg, fg, ...]
+            #         np.save(os.path.join(folder, img_id + '.npy'), cam_crf) # dim CHW
                     
-                    ## give threshold
-                    h, w = list(cam_crf.values())[0].shape
-                    tensor_crf = np.zeros((args.num_classes + 1, h, w), np.float32)
-                    for key in cam_crf.keys():
-                        tensor_crf[key + 1] = cam_crf[key]
-                    tensor_crf[0, :, :] = 0 # give threshold, usually args.thr
-                    pred_crf = np.argmax(tensor_crf, axis=0).astype(np.uint8) # CAM prediction. dim HW, value is 0,1,2,3,4,5, ...
-                    imageio.imwrite(os.path.join(folder, img_id + '.png'), pred_crf) # dim CHW
+            #         ## give threshold
+            #         h, w = list(cam_crf.values())[0].shape
+            #         tensor_crf = np.zeros((args.num_classes + 1, h, w), np.float32)
+            #         for key in cam_crf.keys():
+            #             tensor_crf[key + 1] = cam_crf[key]
+            #         tensor_crf[0, :, :] = 0 # give threshold, usually args.thr
+            #         pred_crf = np.argmax(tensor_crf, axis=0).astype(np.uint8) # CAM prediction. dim HW, value is 0,1,2,3,4,5, ...
+            #         imageio.imwrite(os.path.join(folder, img_id + '.png'), pred_crf) # dim CHW
                     
             if i % 10 == 0:
                 print('PID{}, {}/{} is complete'.format(process_id, i, len(image_ids)))

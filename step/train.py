@@ -6,7 +6,6 @@ import importlib
 
 from voc12 import dataloader
 from utils import pyutils, torchutils, imutils
-from net.resnet38_base import EPS
 
 
 def cam2fg_n_bg(cam, sal_img, label, num_classes=20, sal_thres=0.5, tau=0.4):
@@ -115,14 +114,12 @@ def run(args):
     val_data_loader = DataLoader(val_dataset, batch_size=args.batch_size,
                                  shuffle=False, num_workers=args.num_workers, pin_memory=True, drop_last=True)
     
-    # getting max_iteration
-    # max_step = (len(train_dataset) // args.batch_size) * args.
     
     # model setting & train mode
-    model = EPS(args.num_classes, args.pretrained_path) 
+    model_type = getattr(importlib.import_module('net.resnet38_base'), 'EPS')
+    model = model_type(args.num_classes + 1)
+    model.load_state_dict(torch.load(args.pretrained_path), strict=False)
     
-    # model = getattr(importlib.import_module('net.resnet38_base'), 'EPS')(args.num_classes)
-    # model.load_pretrained(args.pretrained_path)
     
     if torch.cuda.device_count() > 1:
         print("There are(is)", torch.cuda.device_count(), "GPUs!")

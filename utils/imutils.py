@@ -5,6 +5,22 @@ import pydensecrf.densecrf as dcrf
 from pydensecrf.utils import unary_from_softmax
 from PIL import Image
 
+# # Function for Normalizing Images
+class Normalize:
+    def __init__(self, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
+        self.mean = mean
+        self.std = std
+
+    def __call__(self, img):
+        img_arr = np.asarray(img)
+        normalized_img = np.zeros_like(img_arr).astype(np.float32)
+
+        # img is given as HWC dimension
+        normalized_img[..., 0] = (img_arr[..., 0] / 255. - self.mean[0]) / self.std[0]
+        normalized_img[..., 1] = (img_arr[..., 1] / 255. - self.mean[1]) / self.std[1]
+        normalized_img[..., 2] = (img_arr[..., 2] / 255. - self.mean[2]) / self.std[2]
+        return normalized_img
+
 def pil_resize(img, size, order):
     if size[0] == img.shape[0] and size[1] == img.shape[1]:
         return img

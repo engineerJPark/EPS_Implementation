@@ -56,7 +56,7 @@ if __name__ == '__main__':
     parser.add_argument("--pretrained_path", default="savefile/pretrained/resnet38.pth", type=str)
     
     ## Augmentation
-    parser.add_argument("--batch_size", default=4, type=int)
+    parser.add_argument("--batch_size", default=8, type=int)
     parser.add_argument("--crop_size", default=448, type=int)
     parser.add_argument("--resize_size", default=(256, 512), type=int, nargs='*')
     
@@ -66,8 +66,8 @@ if __name__ == '__main__':
     parser.add_argument("--max_iters", default=20000, type=int)
 
     # hyper-parameters for EPS
-    parser.add_argument("--tau", default=0.5, type=float)
-    parser.add_argument("--lam", default=0.5, type=float)
+    parser.add_argument("--tau", default=0.4, type=float) # is different on actual report. see do.sh 
+    parser.add_argument("--lam", default=0.9, type=float)
 
     # Class Activation Map parameter
     parser.add_argument("--cam_scales", default=(0.5, 1.0, 1.5, 2.0),
@@ -76,7 +76,7 @@ if __name__ == '__main__':
     parser.add_argument("--cam_png", default="savefile/result/cam_png", type=str) # "savefile/result/cam" , 
     parser.add_argument("--cam_thres", default=0.20, type=float)
 
-    ### CRF parameter
+    # ### CRF parameter
     parser.add_argument("--crf", default=None, type=str)
     parser.add_argument("--crf_alpha", nargs='*', type=int)
     parser.add_argument("--crf_t", nargs='*', type=int)
