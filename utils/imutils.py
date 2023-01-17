@@ -27,10 +27,10 @@ def pil_resize(img, size, order):
 
     if order == 3:
         resample = Image.BICUBIC
-    elif order == 2:
-        resample = Image.BILINEAR
     elif order == 0:
         resample = Image.NEAREST
+    # elif order == 2:
+    #     resample = Image.BILINEAR
 
     return np.asarray(Image.fromarray(img).resize(size[::-1], resample)) # size get as order for width, height
 
@@ -52,8 +52,8 @@ def random_resize_long(img, min_long, max_long):
             scale = target_long / h
         else:
             scale = target_long / w
-        # img_list.append(pil_rescale(sub_img, scale, 3))
-        img_list.append(pil_rescale(sub_img, scale, 2))
+        img_list.append(pil_rescale(sub_img, scale, 3))
+        # img_list.append(pil_rescale(sub_img, scale, 2))
     img_list = img_list if len(img) == 1 else img_list
     return img_list
 
