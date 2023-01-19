@@ -68,6 +68,7 @@ if __name__ == '__main__':
     # hyper-parameters for EPS
     parser.add_argument("--tau", default=0.4, type=float) # is different on actual report. see do.sh 
     parser.add_argument("--lam", default=0.9, type=float)
+    parser.add_argument("--sal_thres", default=0.5, type=float)
 
     # Class Activation Map parameter
     parser.add_argument("--cam_scales", default=(0.5, 1.0, 1.5, 2.0),
@@ -119,7 +120,7 @@ if __name__ == '__main__':
         timer = pyutils.Timer('step.eval:')
         step.eval.run(args)
     
-    if args.draw_pass is True:
-        import step.draw
-        timer = pyutils.Timer('step.draw:')
-        step.draw.run(args)
+    # if args.draw_pass is True:
+    #     import step.draw
+    #     timer = pyutils.Timer('step.draw:')
+    #     step.draw.run(args)

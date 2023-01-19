@@ -75,7 +75,7 @@ def validate(model, data_loader):
             # classification loss
             loss_cls = F.multilabel_soft_margin_loss(out[:, :-1], label) # for predicted label and GT lable
             
-            ## this part is part of the bug    
+            ## this part is part of the bug
             fg, bg = cam2fg_n_bg(out_cam, sal_img, label) # label should be one hot decoded
             pred_sal = psuedo_saliency(fg, bg)
 
@@ -132,7 +132,7 @@ def run(args):
         model.train()
         param_groups = model.get_parameter_groups()
     
-    # parameter call & optimizer setting
+    # parameter call & optimizer setting    
     optimizer = torchutils.PolyOptimizer([
         {'params': param_groups[0], 'lr': args.lr, 'weight_decay': args.wt_dec},
         {'params': param_groups[1], 'lr': 2*args.lr, 'weight_decay': 0},
@@ -165,8 +165,8 @@ def run(args):
         loss_cls = F.multilabel_soft_margin_loss(out[:, :-1], label) # for predicted label and GT lable
         
         # getting predicted saliency
-        fg, bg = cam2fg_n_bg(out_cam, sal_img, label) # label should be one hot decoded
-        pred_sal = psuedo_saliency(fg, bg)
+        fg, bg = cam2fg_n_bg(out_cam, sal_img, label, num_classes=args.num_classes, sal_thres=args.sal_thres, tau=args.tau) # label should be one hot decoded
+        pred_sal = psuedo_saliency(fg, bg, lamb = args.lam)
         
         # saliency loss 
         loss_sal = F.mse_loss(pred_sal, sal_img.squeeze(dim=1))
@@ -193,7 +193,8 @@ def run(args):
         timer.reset_stage()
         
     else: # if one epoch is trained with no error
-        validate(model, val_data_loader)
+        # validate(model, val_data_loader)
+        pass
             
 
     if torch.cuda.device_count() > 1:

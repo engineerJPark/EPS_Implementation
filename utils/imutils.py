@@ -29,8 +29,6 @@ def pil_resize(img, size, order):
         resample = Image.BICUBIC
     elif order == 0:
         resample = Image.NEAREST
-    # elif order == 2:
-    #     resample = Image.BILINEAR
 
     return np.asarray(Image.fromarray(img).resize(size[::-1], resample)) # size get as order for width, height
 
