@@ -94,7 +94,8 @@ class VOC12ImageDataset(Dataset):
 
     def __init__(self, img_name_list_path, voc12_root, sal_root,
                  resize_long=None, rescale=None, img_normal=Normalize(), hor_flip=False,
-                 crop_size=None, crop_method=None, to_CHW=True):
+                 crop_size=None, crop_method=None, color=transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3, hue=0.1),
+                 to_CHW=True):
 
         self.img_name_list = load_img_name_list(img_name_list_path)
         self.voc12_root = voc12_root
@@ -107,7 +108,7 @@ class VOC12ImageDataset(Dataset):
         self.hor_flip = hor_flip
         self.crop_method = crop_method
         self.to_CHW = to_CHW
-        self.color = transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3, hue=0.1)
+        self.color = color
 
     def __len__(self):
         return len(self.img_name_list)
@@ -129,13 +130,13 @@ class VOC12ImageDataset(Dataset):
         if self.color:
             img = self.color(PIL.Image.fromarray(img))
             img = np.asarray(img)
+        
+        if self.hor_flip:
+            img, sal_img = imutils.random_lr_flip((img, sal_img))
             
         if self.img_normal: # img alone
             img = self.img_normal(img)
             sal_img = sal_img / 255.
-            
-        if self.hor_flip:
-            img, sal_img = imutils.random_lr_flip((img, sal_img))
 
         if self.crop_size:
             if self.crop_method == "random":
@@ -153,10 +154,10 @@ class VOC12ClassificationDataset(VOC12ImageDataset):
 
     def __init__(self, img_name_list_path, voc12_root, sal_root,
                  resize_long=None, rescale=None, img_normal=Normalize(), hor_flip=False,
-                 crop_size=None, crop_method=None):
+                 crop_size=None, crop_method=None, color=transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3, hue=0.1)):
         super().__init__(img_name_list_path, voc12_root, sal_root,
                  resize_long, rescale, img_normal, hor_flip,
-                 crop_size, crop_method)
+                 crop_size, crop_method, color)
         self.label_list = load_image_label_list_from_npy(self.img_name_list)
 
     def __getitem__(self, idx):

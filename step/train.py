@@ -16,7 +16,6 @@ def cam2fg_n_bg(cam, sal_img, label, num_classes=20, sal_thres=0.5, tau=0.4):
     num_classes dont include the background
     '''
     ## getting saliency map
-    # pred_sal = F.softmax(cam, dim=1) # This value is so small...
     b,_,h,w = cam.shape
 
     fg = torch.zeros((b, num_classes + 1, h, w)).float().cuda()
@@ -109,10 +108,10 @@ def run(args):
     train_data_loader = DataLoader(train_dataset, batch_size=args.batch_size,
                                    shuffle=True, num_workers=args.num_workers, pin_memory=True, drop_last=True)
 
-    val_dataset = dataloader.VOC12ClassificationDataset(args.train_list, voc12_root=args.voc12_root, sal_root=args.sal_root,
-                                                              crop_size=args.crop_size)
-    val_data_loader = DataLoader(val_dataset, batch_size=args.batch_size,
-                                 shuffle=False, num_workers=args.num_workers, pin_memory=True, drop_last=True)
+    # val_dataset = dataloader.VOC12ClassificationDataset(args.train_list, voc12_root=args.voc12_root, sal_root=args.sal_root,
+    #                                                           crop_size=args.crop_size)
+    # val_data_loader = DataLoader(val_dataset, batch_size=args.batch_size,
+    #                              shuffle=False, num_workers=args.num_workers, pin_memory=True, drop_last=True)
     
     
     # model setting & train mode
@@ -182,7 +181,7 @@ def run(args):
         loss_total.backward()
         optimizer.step()
 
-        if (optimizer.global_step-1)%500 == 0:
+        if (optimizer.global_step-1)%10 == 0:
             timer.update_progress(optimizer.global_step / args.max_iters)
 
             print('step:%5d/%5d' % (optimizer.global_step - 1, args.max_iters),
