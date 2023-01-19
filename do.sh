@@ -16,3 +16,5 @@ CUDA_VISIBLE_DEVICES=0,1 python main.py \
 # --make_cam_pass=False \
 # --eval_pass=False \
 # --draw_pass=False \
+
+# fixed gpu numbers, batches, weight loading configuration to strict=False

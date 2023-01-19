@@ -164,6 +164,7 @@ cython_debug/
 dataset
 savefile
 test.py
+debug.py
 resnet38.zip
 savefile.zip
 SALImages.tar.gz

@@ -120,7 +120,6 @@ def run(args):
     model = model_type(args.num_classes + 1)
     model.load_state_dict(torch.load(args.pretrained_path), strict=False)
     
-    
     if torch.cuda.device_count() > 1:
         print("There are(is)", torch.cuda.device_count(), "GPUs!")
         model = nn.DataParallel(model)
