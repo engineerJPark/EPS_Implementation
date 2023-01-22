@@ -51,7 +51,6 @@ def random_resize_long(img, min_long, max_long):
         else:
             scale = target_long / w
         img_list.append(pil_rescale(sub_img, scale, 3))
-        # img_list.append(pil_rescale(sub_img, scale, 2))
     img_list = img_list if len(img) == 1 else img_list
     return img_list
 
@@ -123,16 +122,10 @@ def random_crop(images, cropsize, default_values):
         cont[box[0]:box[1], box[2]:box[3]] = img[box[4]:box[5], box[6]:box[7]]
         new_images.append(cont)
         
-    # print('second:', len(new_images))
-    # print(type(new_images))
 
     if len(new_images) == 1:
         new_images = new_images[0]
         
-    # print(len(new_images))
-    # print(new_images.shape)
-    # print(type(new_images))
-    
     return new_images
 
 def top_left_crop(img, cropsize, default_value):
@@ -218,6 +211,16 @@ def img2npy(img, img_name, labels):
     function for save CAM to npy file
     img is cam
     id is name of input image 
+    
+    ### how to use img2npy & npy2img
+    for step, pack enumerate(data_loader):
+        id = pack['name']
+        img2npy(cam, id, labels)
+
+    from dataset.dataloader import load_img_name_list
+    img_name_list = load_img_name_list(img_name_list_path)
+    for id in img_name_list:
+        npy2img(id)
     '''
     # npy exporting
     np.save(os.path.join('./cam_result', img_name + '.npy'), {"labels": labels, "cam": img})
@@ -228,23 +231,19 @@ def npy2img(img_name, npy_path='./cam_result'):
     function for recall npy to show CAM image
     npy_path is the path for the npy file
     img_name is name of the image
+
+    ### how to use img2npy & npy2img
+    for step, pack enumerate(data_loader):
+        id = pack['name']
+        img2npy(cam, id, labels)
+
+    from dataset.dataloader import load_img_name_list
+    img_name_list = load_img_name_list(img_name_list_path)
+    for id in img_name_list:
+        npy2img(id)
     '''
     data_dict = np.load(npy_path + '_' + img_name).item()
     labels = data_dict['labels']
     cam = data_dict['cam']
     
     return labels, cam
-
-
-
-'''
-### how to use img2npy & npy2img
-for step, pack enumerate(data_loader):
-    id = pack['name']
-    img2npy(cam, id, labels)
-
-from dataset.dataloader import load_img_name_list
-img_name_list = load_img_name_list(img_name_list_path)
-for id in img_name_list:
-    npy2img(id)
-'''

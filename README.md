@@ -19,16 +19,9 @@ cd eps && bash do.sh
 for installing overall depency of this repo, follow this installation : 
 
 ```
-sudo apt install git
-sudo apt update && sudo apt install build-essential
-pip install matplotlib; pip install imageio
-sudo apt-get remove cython && pip install -U cython && pip install git+https://github.com/lucasb-eyer/pydensecrf.git
-```
-
-for spend some lazy times... use tmux.
-
-```
-sudo apt-get install tmux
+sudo apt update && sudo apt install git && sudo apt-get install tmux
+sudo apt install build-essential && sudo apt-get remove cython && pip install -U cython && pip install git+https://github.com/lucasb-eyer/pydensecrf.git
+pip install matplotlib && pip install imageio
 ```
 
 # Acknowledgements

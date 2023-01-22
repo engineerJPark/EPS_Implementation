@@ -1,6 +1,6 @@
 clear
 CUDA_VISIBLE_DEVICES=0,1 python main.py \
---batch_size 16 \
+--batch_size 8 \
 --tau 0.4 \
 --lam 0.5 \
 --cam_thres 0.20 \

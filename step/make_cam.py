@@ -126,7 +126,6 @@ def infer_cam_mp(process_id, image_ids, label_list, cur_gpu, args):
     with torch.no_grad():
         for i, (img_id, label) in enumerate(zip(image_ids, label_list)):
             # load image
-            # print(img_id) ## debug
             img_id = decode_int_filename(img_id)
             img_path = os.path.join(args.img_root, img_id + '.jpg')
             img = Image.open(img_path).convert('RGB')

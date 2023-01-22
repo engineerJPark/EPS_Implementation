@@ -127,13 +127,13 @@ class VOC12ImageDataset(Dataset):
         if self.rescale:
             img, sal_img = imutils.random_scale((img, sal_img), scale_range=self.rescale, order=3)
             
+        if self.hor_flip:
+            img, sal_img = imutils.random_lr_flip((img, sal_img))
+            
         if self.color:
             img = self.color(PIL.Image.fromarray(img))
             img = np.asarray(img)
         
-        if self.hor_flip:
-            img, sal_img = imutils.random_lr_flip((img, sal_img))
-            
         if self.img_normal: # img alone
             img = self.img_normal(img)
             sal_img = sal_img / 255.
