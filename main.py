@@ -2,26 +2,26 @@ import argparse
 import os
 from utils import pyutils
 
-## random seed fixing
-## PyTorch
-import torch
-seed = 42
-torch.manual_seed(seed)
-torch.cuda.manual_seed(seed)
-torch.cuda.manual_seed_all(seed) # gpu 1개 이상일 때 
+# ## random seed fixing
+# ## PyTorch
+# import torch
+# seed = 42
+# torch.manual_seed(seed)
+# torch.cuda.manual_seed(seed)
+# torch.cuda.manual_seed_all(seed) # gpu 1개 이상일 때 
 
-## Numpy
-import numpy as np
-np.random.seed(seed)
+# ## Numpy
+# import numpy as np
+# np.random.seed(seed)
 
-## CuDNN
-import torch.backends.cudnn as cudnn
-cudnn.benchmark = False
-# cudnn.deterministic = True # Low Calculation Done... use only at end of research
+# ## CuDNN
+# import torch.backends.cudnn as cudnn
+# cudnn.benchmark = False
+# # cudnn.deterministic = True # Low Calculation Done... use only at end of research
 
-## Python
-import random
-random.seed(seed)
+# ## Python
+# import random
+# random.seed(seed)
 
 if __name__ == '__main__':
     if torch.cuda.is_available(): 

@@ -2,7 +2,7 @@ clear
 CUDA_VISIBLE_DEVICES=0,1 python main.py \
 --batch_size 16 \
 --tau 0.4 \
---lam 0.9 \
+--lam 0.5 \
 --cam_thres 0.20 \
 --crf None \
 --crf_alpha 4 \
@@ -19,5 +19,3 @@ CUDA_VISIBLE_DEVICES=0,1 python main.py \
 # --draw_pass=False \
 
 # fixed gpu numbers, batches, weight loading configuration to strict=False
-
-# --lam=0.9 \
