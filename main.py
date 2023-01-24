@@ -68,7 +68,7 @@ if __name__ == '__main__':
 
     # hyper-parameters for EPS
     parser.add_argument("--tau", default=0.4, type=float) # is different on actual report. see do.sh 
-    parser.add_argument("--lam", default=0.9, type=float)
+    parser.add_argument("--lam", default=0.5, type=float)
     parser.add_argument("--sal_thres", default=0.5, type=float)
 
     # Class Activation Map parameter
