@@ -19,7 +19,6 @@ from voc12.dataloader import load_img_id_list, load_image_label_list_from_npy, d
 
 start = time.time()
 
-
 def parse_args(args):
     ## model information
     if args.dataset == 'voc12':
@@ -172,7 +171,6 @@ def main_mp(args):
         
 
 def run(args):
-    # args.crf_alpha = (4, 32) # for low background constraint, alpha 4, strong background constraint, alpha 32
     args.transform = torchvision.transforms.Compose([np.asarray, Normalize(), HWC_to_CHW])
     args = parse_args(args)
     

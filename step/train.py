@@ -26,7 +26,7 @@ def cam2fg_n_bg(cam, sal_img, label, num_classes=20, sal_thres=0.5, tau=0.4):
     ## sum up for each channel -> get ratio for each channel
     overlap_ratio = ((cam[:, :-1] > sal_thres) * (sal_img > sal_thres)).reshape(b, num_classes, -1).sum(-1) / \
         ((cam[:, :-1] > sal_thres) + 1e-5).reshape(b, num_classes, -1).sum(-1) 
-    fg_channel = (overlap_ratio > tau).reshape(b, num_classes, 1, 1).expand(b, num_classes, h, w) ## all the value is False ...
+    fg_channel = (overlap_ratio > tau).reshape(b, num_classes, 1, 1).expand(b, num_classes, h, w)
 
     fg[:,:-1] = cam[:, :-1] * fg_channel.to(torch.float) # valid channel for fg
     bg[:,:-1] = cam[:, :-1] * (~fg_channel).to(torch.float) # valid channel for bg
