@@ -73,10 +73,10 @@ if __name__ == '__main__':
     parser.add_argument("--cam_out_dir", default="savefile/result/cam_npy", type=str) # npy path
     
     # Step
-    parser.add_argument("--train_pass", default=True)
-    parser.add_argument("--make_cam_pass", default=True)
-    parser.add_argument("--eval_pass", default=True)
-    parser.add_argument("--draw_pass", default=True)
+    parser.add_argument("--train_pass", default=False, type=bool)
+    parser.add_argument("--make_cam_pass", default=False, type=bool)
+    parser.add_argument("--eval_pass", default=False, type=bool)
+    parser.add_argument("--draw_pass", default=False, type=bool)
 
     args = parser.parse_args()
     

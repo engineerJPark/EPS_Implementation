@@ -2,6 +2,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 import numpy as np
+from utils import imutils
 
 
 # batch norm should be fixed in fine tune for WSSS
@@ -122,7 +123,7 @@ class Net(nn.Module):
         ###############################################
         # utility
         self.not_training = [self.conv1a]
-        self.normalize = Normalize()
+        self.normalize = imutils.Normalize()
 
     def forward(self, x):
         x = self.conv1a(x)
@@ -181,17 +182,17 @@ class EPS(Net):
         super().__init__()
         if filename is not None: self.load_pretrained(filename)
 
-        self.conv_cam = nn.Conv2d(4096, num_classes + 1, 1, bias=False) # background -> +1
-        torch.nn.init.xavier_uniform_(self.conv_cam.weight)
+        self.fc8 = nn.Conv2d(4096, num_classes, 1, bias=False) # background -> +1
+        torch.nn.init.xavier_uniform_(self.fc8.weight)
 
         ###############################################
         # utility
         self.not_training = [self.conv1a, self.b2, self.b2_1, self.b2_2]
-        self.from_scratch_layers = [self.conv_cam]
+        self.from_scratch_layers = [self.fc8]
 
     def forward(self, x): # give prediction & CAM
         x = super(EPS, self).forward(x)['conv6'] # output is tuple
-        x_cam = self.conv_cam(x)
+        x_cam = self.fc8(x)
         x = F.adaptive_avg_pool2d(x_cam, 1)
         x = x.reshape(x.shape[0], -1)
 
