@@ -3,26 +3,9 @@ import os
 from utils import pyutils
 import torch
 
-# ## random seed fixing
-# ## PyTorch
-# import torch
-# seed = 42
-# torch.manual_seed(seed)
-# torch.cuda.manual_seed(seed)
-# torch.cuda.manual_seed_all(seed) # gpu 1개 이상일 때 
-
-# ## Numpy
-# import numpy as np
-# np.random.seed(seed)
-
-# ## CuDNN
-# import torch.backends.cudnn as cudnn
-# cudnn.benchmark = False
-# # cudnn.deterministic = True # Low Calculation Done... use only at end of research
-
-# ## Python
-# import random
-# random.seed(seed)
+import torch.backends.cudnn as cudnn
+cudnn.enabled = True
+torch.backends.cudnn.benchmark = False
 
 if __name__ == '__main__':
     if torch.cuda.is_available(): 
