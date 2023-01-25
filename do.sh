@@ -8,7 +8,8 @@ CUDA_VISIBLE_DEVICES=0,1 python main.py \
 --infer_list "voc12/train.txt" \
 --val_list "voc12/train.txt" \
 --num_workers 0 \
-# --train_pass=False \
+--train_pass=False \
+--n_processes_per_gpu 1 \
 # --make_cam_pass=False \
 # --eval_pass=False \
 # --draw_pass=False \
