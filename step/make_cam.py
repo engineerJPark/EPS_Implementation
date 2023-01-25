@@ -110,15 +110,10 @@ def _crf_with_alpha(image, cam_dict, alpha, t=10):
     return n_crf_al
 
 
-# def infer_cam_mp(process_id, image_ids, label_list, cur_gpu, args):
 def infer_cam_mp(image_ids, label_list, cur_gpu, args):
     print('process {} starts...'.format(os.getpid()))
 
-    # print(process_id, cur_gpu)
-    # print('GPU Number:', cur_gpu)
     print('{} images per process'.format(len(image_ids)))
-
-    # model = getattr(importlib.import_module(args.network), 'EPS')(args.model_num_classes)
     method = getattr(importlib.import_module(args.network), 'EPS')
     model = method(args.num_classes + 1).cuda(cur_gpu)
     model.load_state_dict(torch.load(args.cam_weights_name))
@@ -164,8 +159,6 @@ def infer_cam_mp(image_ids, label_list, cur_gpu, args):
             if i % 10 == 0:
                 print('{}/{} is complete'.format(i, len(image_ids)))
                     
-            # if i % 10 == 0:
-            #     print('PID{}, {}/{} is complete'.format(process_id, i, len(image_ids)))
 
 
 def main_mp(args):
@@ -176,60 +169,6 @@ def main_mp(args):
     assert len(image_ids) == len(label_list)
 
     infer_cam_mp(image_ids, label_list, 'cuda:0', args)
-
-
-    # saved_list = sorted([file[:-4] for file in os.listdir(args.cam_out_dir)]) ## get CAM npy or png. save_type[0]
-    # n_saved_images = len(saved_list)
-    # new_image_ids = list()
-    # new_label_list = list()
-    
-    # ## append imgs not in saved_list
-    # for i, name in enumerate(image_ids):
-    #     if name not in saved_list:
-    #         new_image_ids.append(name)
-    #         new_label_list.append(label_list[i])
-    # image_ids = new_image_ids
-    # label_list = new_label_list
-
-    # n_total_processes = args.n_total_processes
-    # print('===========================')
-    # print('OVERALL INFORMATION')
-    # print('n_gpus:', args.n_gpus)
-    # print('n_processes_per_gpu', args.n_processes_per_gpu)
-    # print('n_total_processes:', n_total_processes)
-    # print('n_total_images:', n_total_images)
-    # print('n_saved_images:', n_saved_images)
-    # print('n_images_to_proceed', len(image_ids))
-    # print('===========================')
-
-    # sub_image_ids = list()
-    # sub_label_list = list()
-
-    # # split model and data
-    # split_size = len(image_ids) // n_total_processes
-    # for i in range(n_total_processes):
-    #     # split image ids and labels
-    #     if i == n_total_processes - 1:
-    #         sub_image_ids.append(image_ids[split_size * i:])
-    #         sub_label_list.append(label_list[split_size * i:])
-    #     else:
-    #         sub_image_ids.append(image_ids[split_size * i:split_size * (i + 1)])
-    #         sub_label_list.append(label_list[split_size * i:split_size * (i + 1)])
-
-    # # multi-process
-    # torch.multiprocessing.set_start_method('spawn')
-    # gpu_list = list()
-    # for idx, num in enumerate(args.n_processes_per_gpu):
-    #     gpu_list.extend([idx for i in range(num)]) # 0,0,0,0,1,1,1,1,2,2,2,2,3,3,3, ... 
-    # processes = list()
-    # for idx, process_id in enumerate(range(n_total_processes)):
-    #     proc = Process(target=infer_cam_mp,
-    #                    args=(process_id, sub_image_ids[idx], sub_label_list[idx], gpu_list[idx], args))
-    #     processes.append(proc)
-    #     proc.start()
-
-    # for proc in processes:
-    #     proc.join()
         
 
 def run(args):

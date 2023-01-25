@@ -49,116 +49,6 @@ def psuedo_saliency(fg, bg, lamb = 0.5):
     
     return pred_sal_map # BHW
 
-# def get_eps_loss(cam, saliency, num_classes, label, tau, lam, intermediate=True):
-#     """
-#     Get EPS loss for pseudo-pixel supervision from saliency map.
-#     Args:
-#         cam (tensor): response from model with float values.
-#         saliency (tensor): saliency map from off-the-shelf saliency model.
-#         num_classes (int): the number of classes
-#         label (tensor): label information.
-#         tau (float): threshold for confidence area
-#         lam (float): blending ratio between foreground map and background map
-#         intermediate (bool): if True return all the intermediates, if not return only loss.
-#     Shape:
-#         cam (N, C, H', W') where N is the batch size and C is the number of classes.
-#         saliency (N, 1, H, W)
-#         label (N, C)
-#     """
-#     b, c, h, w = cam.size()
-#     saliency = F.interpolate(saliency, size=(h, w))
-
-#     label_map = label.view(b, num_classes, 1, 1).expand(size=(b, num_classes, h, w)).bool()
-
-#     # Map selection
-#     label_map_fg = torch.zeros(size=(b, num_classes + 1, h, w)).bool().cuda()
-#     label_map_bg = torch.zeros(size=(b, num_classes + 1, h, w)).bool().cuda()
-
-#     label_map_bg[:, num_classes] = True
-#     label_map_fg[:, :-1] = label_map.clone()
-
-#     sal_pred = F.softmax(cam, dim=1)
-
-#     iou_saliency = (torch.round(sal_pred[:, :-1].detach()) * torch.round(saliency)).view(b, num_classes, -1).sum(-1) / \
-#                    (torch.round(sal_pred[:, :-1].detach()) + 1e-04).view(b, num_classes, -1).sum(-1)
-
-#     valid_channel = (iou_saliency > tau).view(b, num_classes, 1, 1).expand(size=(b, num_classes, h, w))
-
-#     label_fg_valid = label_map & valid_channel
-
-#     label_map_fg[:, :-1] = label_fg_valid
-#     label_map_bg[:, :-1] = label_map & (~valid_channel)
-
-#     # Saliency loss
-#     fg_map = torch.zeros_like(sal_pred).cuda()
-#     bg_map = torch.zeros_like(sal_pred).cuda()
-
-#     fg_map[label_map_fg] = sal_pred[label_map_fg]
-#     bg_map[label_map_bg] = sal_pred[label_map_bg]
-
-#     fg_map = torch.sum(fg_map, dim=1, keepdim=True)
-#     bg_map = torch.sum(bg_map, dim=1, keepdim=True)
-
-#     bg_map = torch.sub(1, bg_map)
-#     sal_pred = fg_map * lam + bg_map * (1 - lam)
-
-#     loss = F.mse_loss(sal_pred, saliency)
-
-#     if intermediate:
-#         return loss, fg_map, bg_map, sal_pred
-#     else:
-#         return loss
-
-
-# def validate(model, data_loader):
-#     if torch.cuda.device_count() > 1:
-#         model.module.eval()
-#     else:
-#         model.eval()
-    
-#     print('validating ... ', flush=True, end='')
-#     val_loss_meter = pyutils.AverageMeter()
-
-#     with torch.no_grad():
-#         for pack in data_loader:
-#             # img, label & cuda
-#             img = pack['img'].cuda(non_blocking=True) # BCHW
-#             sal_img = pack['sal_img'].cuda(non_blocking=True) # BHW
-#             label = pack['label'].cuda(non_blocking=True)
-     
-#             # prediction
-#             out, out_cam = model(img)
-#             out_cam = F.softmax(out_cam, dim=1)
-#             # b, _, h, w = out_cam.shape # get original size
-#             # sal_img = F.interpolate(sal_img.unsqueeze(dim=1), size=(h, w), mode='bilinear')
-            
-#             # classification loss
-#             loss_cls = F.multilabel_soft_margin_loss(out[:, :-1], label) # for predicted label and GT lable
-            
-#             ## this part is part of the bug
-#             # fg, bg = cam2fg_n_bg(out_cam, sal_img, label) # label should be one hot decoded
-#             # pred_sal = psuedo_saliency(fg, bg)
-#             # loss_sal = F.mse_loss(pred_sal, sal_img.squeeze(dim=1))
-            
-
-#             # total loss
-#             loss_total = loss_cls + loss_sal
-
-#             # adding total loss
-#             val_loss_meter.add({'loss': loss_total.item()})
-#             val_loss_meter.add({'loss_cls': loss_cls.item()}) ## debug
-#             val_loss_meter.add({'loss_sal': loss_sal.item()}) ## debug
-
-#     print('validation loss_total: %.4f' % (val_loss_meter.pop('loss')))
-#     print('validation loss_cls: %.4f' % (val_loss_meter.pop('loss_cls')))
-#     print('validation loss_sal: %.4f' % (val_loss_meter.pop('loss_sal')))
-    
-#     if torch.cuda.device_count() > 1:
-#         model.module.train()
-#     else:
-#         model.train()
-    
-#     return
 
 
 def run(args):
@@ -168,12 +58,6 @@ def run(args):
                                                                 crop_size=args.crop_size, crop_method="random")
     train_data_loader = DataLoader(train_dataset, batch_size=args.batch_size,
                                    shuffle=True, num_workers=args.num_workers, pin_memory=True, drop_last=True)
-
-    # val_dataset = dataloader.VOC12ClassificationDataset(args.train_list, voc12_root=args.voc12_root, sal_root=args.sal_root,
-    #                                                           crop_size=args.crop_size)
-    # val_data_loader = DataLoader(val_dataset, batch_size=args.batch_size,
-    #                              shuffle=False, num_workers=args.num_workers, pin_memory=True, drop_last=True)
-    
     
     # model setting & train mode
     model_type = getattr(importlib.import_module('net.resnet38_base'), 'EPS')
@@ -206,9 +90,6 @@ def run(args):
 
     # for ep in range(args.cam_num_epoches):
     for it in range(args.max_iters):
-        # print('Epoch %d/%d' % (ep+1, args.cam_num_epoches))
-
-        # for step, pack in enumerate(train_data_loader):
         # img, label & cuda
         pack = next(iter(train_data_loader))
         img = pack['img'].cuda(non_blocking=True) # BCHW
@@ -250,12 +131,7 @@ def run(args):
                     'loss_sal:%.4f' % (avg_meter.pop('loss_sal')),
                     'etc:%s' % (timer.str_estimated_complete()), flush=True)
         timer.reset_stage()
-        
-    else: # if one epoch is trained with no error
-        # validate(model, val_data_loader)
-        pass
             
-
     if torch.cuda.device_count() > 1:
         torch.save(model.module.state_dict(), args.cam_weights_name)
     else:
